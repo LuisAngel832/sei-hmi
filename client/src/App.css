@@ -1,0 +1,55 @@
+.app {
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dashboard {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(280px, 316px));
+  gap: 16px;
+  max-width: 100%;
+  width: fit-content;
+  justify-content: center;
+}
+
+/* Responsive: menos columnas en pantallas pequenas */
+@media (max-width: 1700px) {
+  .room-grid {
+    grid-template-columns: repeat(4, minmax(280px, 316px));
+  }
+}
+
+@media (max-width: 1400px) {
+  .room-grid {
+    grid-template-columns: repeat(3, minmax(280px, 316px));
+  }
+}
+
+@media (max-width: 1100px) {
+  .room-grid {
+    grid-template-columns: repeat(2, minmax(280px, 316px));
+  }
+}
+
+@media (max-width: 700px) {
+  .room-grid {
+    grid-template-columns: minmax(280px, 316px);
+  }
+  
+  .dashboard {
+    padding: 16px;
+  }
+}
