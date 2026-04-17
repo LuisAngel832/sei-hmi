@@ -1,11 +1,12 @@
 import './RoomCard.css'
 
-export function RoomCard({ cuartoId, datos }) {
+export function RoomCard({ cuartoId, datos, onSilenciar, onCerrarPuerta }) {
   const {
     temperatura,
     estadoAlarma = 'normal',
     presencia = false,
     puerta = 'cerrada',
+    cortina = 'inactiva',   // ← nuevo
     refrigeracion = 100
   } = datos
 
@@ -38,7 +39,7 @@ export function RoomCard({ cuartoId, datos }) {
     }
     if (estadoAlarma === 'preventiva') return {
       background: 'rgba(245, 158, 11, 0.1)',
-      border: '1px solid rgba(239, 68, 68, 0.35)',
+      border: '1px solid rgba(245, 158, 11, 0.35)',
       color: 'var(--color-preventiva)',
       dotColor: 'var(--color-preventiva)'
     }
@@ -68,7 +69,7 @@ export function RoomCard({ cuartoId, datos }) {
     return '#334155'
   }
 
-  const showSilenciarBtn = estadoAlarma === 'critica' || estadoAlarma === 'preventiva'
+  const showSilenciarBtn = estadoAlarma === 'critica'
   const showCerrarBtn = estadoAlarma === 'critica' && puerta === 'abierta'
 
   return (
@@ -142,6 +143,19 @@ export function RoomCard({ cuartoId, datos }) {
         </div>
       </div>
 
+      <div className="room-card__sensor">
+        <span className="room-card__sensor-label">CORTINA</span>
+        <div className="room-card__sensor-value">
+          <span
+            className="room-card__sensor-dot"
+            style={{ background: cortina === 'activa' ? 'var(--color-preventiva)' : '#334155' }}
+          />
+          <span style={{ color: cortina === 'activa' ? 'var(--color-preventiva)' : 'var(--text-muted)' }}>
+            {cortina === 'activa' ? 'Activa' : 'Inactiva'}
+          </span>
+        </div>
+      </div>
+
       {/* Refrigeración */}
       <div className="room-card__refrig">
         <span className="room-card__sensor-label">REFRIGERACIÓN</span>
@@ -158,16 +172,22 @@ export function RoomCard({ cuartoId, datos }) {
       {/* Botones de acción */}
       <div className="room-card__actions">
         {showCerrarBtn ? (
-          <button className="room-card__btn room-card__btn--cerrar">
+          <button
+            className="room-card__btn room-card__btn--cerrar"
+            onClick={() => onCerrarPuerta?.(cuartoId)}
+          >
             Cerrar Puerta
           </button>
         ) : (
           <button className="room-card__btn room-card__btn--abrir">
-            Abrir puerta
+            Abrir puerta  
           </button>
         )}
         {showSilenciarBtn && (
-          <button className="room-card__btn room-card__btn--silenciar">
+          <button
+            className="room-card__btn room-card__btn--silenciar"
+            onClick={() => onSilenciar?.(cuartoId)}
+          >
             Silenciar<br />Alarma
           </button>
         )}
