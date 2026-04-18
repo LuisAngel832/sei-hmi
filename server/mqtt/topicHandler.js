@@ -7,47 +7,59 @@ export function handleMessage(topic, data, io) {
 
   if (!cuartoId || cuartoId < 1 || cuartoId > 5) {
     console.warn(`[HANDLER] cuarto_id fuera de rango en tópico: ${topic}`)
-    return
+    return null
   }
 
   switch (categoria) {
     case 'temperatura':
-      io.emit('temperatura', {
+    {
+      const payload = {
         cuartoId,
         temperatura: data.temperatura,
         estadoAlarma: data.estado_alarma,
         timestamp: data.timestamp
-      })
-      break
+      }
+      io.emit('temperatura', payload)
+      return { event: 'temperatura', payload }
+    }
 
     case 'presencia':
-      io.emit('presencia', {
+    {
+      const payload = {
         cuartoId,
         presencia: data.presencia,
         timestamp: data.timestamp
-      })
-      break
+      }
+      io.emit('presencia', payload)
+      return { event: 'presencia', payload }
+    }
 
     case 'alarma':
-      io.emit('alarma', {
+    {
+      const payload = {
         cuartoId,
         estado: data.estado,
         temperaturaPico: data.temperatura_pico,
         timestamp: data.timestamp
-      })
-      break
+      }
+      io.emit('alarma', payload)
+      return { event: 'alarma', payload }
+    }
 
     case 'puerta':
-      io.emit('puerta', {
+    {
+      const payload = {
         cuartoId,
         estado: data.estado,
         origen: data.origen,
         timestamp: data.timestamp
-      })
-      break
+      }
+      io.emit('puerta', payload)
+      return { event: 'puerta', payload }
+    }
 
     default:
       // Tópicos de comando (puerta/cmd, refrigeracion/cmd) — el HMI no los procesa
-      break
+      return null
   }
 }
