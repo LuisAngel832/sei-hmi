@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import './RoomCard.css'
 
 export function RoomCard({ cuartoId, datos, onSilenciar, onCerrarPuerta }) {
@@ -195,4 +196,19 @@ export function RoomCard({ cuartoId, datos, onSilenciar, onCerrarPuerta }) {
 
     </div>
   )
+}
+
+RoomCard.propTypes = {
+  cuartoId: PropTypes.number.isRequired,
+  datos: PropTypes.shape({
+    temperatura: PropTypes.number,
+    estadoAlarma: PropTypes.string,
+    presencia: PropTypes.bool,
+    puerta: PropTypes.string,
+    cortina: PropTypes.string,
+    refrigeracion: PropTypes.number,
+    sinSenal: PropTypes.bool
+  }).isRequired,
+  onSilenciar: PropTypes.func,
+  onCerrarPuerta: PropTypes.func
 }

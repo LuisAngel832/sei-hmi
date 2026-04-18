@@ -12,7 +12,7 @@ export function handleMessage(topic, data, io) {
 
   switch (categoria) {
     case 'temperatura':
-      {
+    {
       const payload = {
         cuartoId,
         temperatura: data.temperatura,
@@ -21,11 +21,10 @@ export function handleMessage(topic, data, io) {
       }
       io.emit('temperatura', payload)
       return { event: 'temperatura', payload }
-      }
-      break
+    }
 
     case 'presencia':
-      {
+    {
       const payload = {
         cuartoId,
         presencia: data.presencia,
@@ -33,11 +32,10 @@ export function handleMessage(topic, data, io) {
       }
       io.emit('presencia', payload)
       return { event: 'presencia', payload }
-      }
-      break
+    }
 
     case 'alarma':
-      {
+    {
       const payload = {
         cuartoId,
         estado: data.estado,
@@ -46,11 +44,10 @@ export function handleMessage(topic, data, io) {
       }
       io.emit('alarma', payload)
       return { event: 'alarma', payload }
-      }
-      break
+    }
 
     case 'puerta':
-      {
+    {
       const payload = {
         cuartoId,
         estado: data.estado,
@@ -59,13 +56,10 @@ export function handleMessage(topic, data, io) {
       }
       io.emit('puerta', payload)
       return { event: 'puerta', payload }
-      }
-      break
+    }
 
     default:
       // Tópicos de comando (puerta/cmd, refrigeracion/cmd) — el HMI no los procesa
       return null
   }
-
-  return null
 }

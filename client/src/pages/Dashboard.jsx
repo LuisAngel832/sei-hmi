@@ -161,7 +161,7 @@ export function Dashboard() {
           <div className="dashboard__log">
             <h2 className="dashboard__log-titulo">LOG DE EVENTOS</h2>
             <div className="dashboard__log-entries">
-              {eventosLog.slice().reverse().map((ev, i) => {
+              {eventosLog.slice().reverse().map((ev) => {
                 const getEventColor = () => {
                   if (ev.tipo === 'critica') return 'var(--color-critica)'
                   if (ev.tipo === 'preventiva') return 'var(--color-preventiva)'
@@ -170,7 +170,7 @@ export function Dashboard() {
                 const eventColor = getEventColor()
 
                 return (
-                  <div key={i} className="dashboard__log-entry">
+                  <div key={ev.id} className="dashboard__log-entry">
                     <span className="dashboard__log-hora">{ev.hora}</span>
                     <span style={{ color: eventColor }}>
                       {ev.cuartoId ? `[C${ev.cuartoId}] ` : ''}{ev.descripcion}

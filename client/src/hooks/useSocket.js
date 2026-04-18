@@ -27,16 +27,30 @@ const formatHora = () => new Date().toLocaleTimeString('es-MX', {
 })
 
 export function useSocket() {
+  const nextEventoIdRef = useRef(2)
   const [cuartos, setCuartos] = useState(USAR_DATOS_MOCK ? datosMock : estadoInicial)
   const [conectado, setConectado] = useState(USAR_DATOS_MOCK)
   const [eventosLog, setEventosLog] = useState([
-    { hora: formatHora(), cuartoId: null, descripcion: 'Sistema iniciado — esperando datos', tipo: 'info' }
+    {
+      id: 1,
+      hora: formatHora(),
+      cuartoId: null,
+      descripcion: 'Sistema iniciado — esperando datos',
+      tipo: 'info'
+    }
   ])
   const timeoutRefs = useRef({})
   const socketRef = useRef(null)
 
   const agregarEvento = useCallback((cuartoId, descripcion, tipo = 'info') => {
-    setEventosLog(prev => [...prev, { hora: formatHora(), cuartoId, descripcion, tipo }].slice(-20))
+    const evento = {
+      id: nextEventoIdRef.current++,
+      hora: formatHora(),
+      cuartoId,
+      descripcion,
+      tipo
+    }
+    setEventosLog(prev => [...prev, evento].slice(-20))
   }, [])
 
   const esCuartoValido = useCallback((cuartoId) => {
