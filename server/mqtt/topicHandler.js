@@ -58,6 +58,18 @@ export function handleMessage(topic, data, io) {
       return { event: 'puerta', payload }
     }
 
+    case 'cortina':
+    {
+      const payload = {
+        cuartoId,
+        estado: data.estado,
+        origen: data.origen,
+        timestamp: data.timestamp
+      }
+      io.emit('cortina', payload)
+      return { event: 'cortina', payload }
+    }
+
     default:
       // Tópicos de comando (puerta/cmd, refrigeracion/cmd) — el HMI no los procesa
       return null

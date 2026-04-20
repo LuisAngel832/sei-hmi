@@ -8,6 +8,7 @@ function createInitialRoomState() {
     estadoAlarma: 'normal',
     presencia: false,
     puerta: 'cerrada',
+    cortina: 'inactiva',
     timestamp: null,
     temperaturaPico: null
   }
@@ -35,6 +36,12 @@ function emitSnapshot(socket, snapshotByRoom) {
     socket.emit('puerta', {
       cuartoId,
       estado: room.puerta,
+      timestamp: room.timestamp
+    })
+
+    socket.emit('cortina', {
+      cuartoId,
+      estado: room.cortina,
       timestamp: room.timestamp
     })
 
@@ -75,6 +82,10 @@ function updateSnapshot(snapshotByRoom, normalizedEvent) {
       break
     case 'puerta':
       current.puerta = payload.estado || current.puerta
+      current.timestamp = payload.timestamp || current.timestamp
+      break
+    case 'cortina':
+      current.cortina = payload.estado || current.cortina
       current.timestamp = payload.timestamp || current.timestamp
       break
     default:

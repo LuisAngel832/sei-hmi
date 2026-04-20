@@ -8,10 +8,10 @@ const OPERADOR_ID = Number.parseInt(import.meta.env.VITE_OPERADOR_ID || '1', 10)
 
 const datosMock = {
   1: { temperatura: -2.5, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: Date.now(), sinSenal: false },
-  2: { temperatura: 4.6, estadoAlarma: 'critica', presencia: true, puerta: 'abierta', cortina: 'activa', refrigeracion: 100, timestamp: Date.now(), sinSenal: false },
+  2: { temperatura: 1.2, estadoAlarma: 'normal', presencia: true, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: Date.now(), sinSenal: false },
   3: { temperatura: 3.5, estadoAlarma: 'preventiva', presencia: false, puerta: 'abierta', cortina: 'activa', refrigeracion: 100, timestamp: Date.now(), sinSenal: false },
   4: { temperatura: 5.1, estadoAlarma: 'critica', presencia: true, puerta: 'abierta', cortina: 'activa', refrigeracion: 100, timestamp: Date.now(), sinSenal: false },
-  5: { temperatura: 4.2, estadoAlarma: 'critica', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: Date.now(), sinSenal: false }
+  5: { temperatura: -1.8, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: Date.now(), sinSenal: false }
 }
 
 const estadoInicial = {
