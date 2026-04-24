@@ -3,7 +3,7 @@ import { RoomCard } from '../../components/RoomCard/RoomCard'
 import './Dashboard.css'
 
 export function Dashboard() {
-  const { cuartos, conectado, eventosLog } = useSocket()
+  const { cuartos, conectado, eventosLog, silenciarAlarma, cerrarPuerta } = useSocket()
 
   const hora = new Date().toLocaleTimeString('es-MX', {
     hour: '2-digit',
@@ -73,6 +73,8 @@ export function Dashboard() {
               key={id}
               cuartoId={Number(id)}
               datos={datos}
+              onSilenciar={silenciarAlarma}
+              onCerrarPuerta={cerrarPuerta}
             />
           ))}
         </div>
