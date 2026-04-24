@@ -164,7 +164,7 @@ export function RoomCard({ cuartoId, datos, onSilenciar, onCerrarPuerta }) {
           <div className="room-card__temp-bar-bg" />
           <div
             className="room-card__temp-bar-fill"
-            style={{ width: '100%', background: 'var(--text-cyan)' }}
+            style={{ width: `${Math.min(Math.max(refrigeracion, 0), 100)}%`, background: 'var(--text-cyan)' }}
           />
         </div>
         <span className="room-card__refrig-value">{refrigeracion}%</span>
