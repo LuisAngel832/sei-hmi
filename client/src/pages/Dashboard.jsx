@@ -3,7 +3,7 @@ import { RoomCard } from '../../components/RoomCard/RoomCard'
 import './Dashboard.css'
 
 export function Dashboard() {
-  const { cuartos, conectado } = useSocket()
+  const { cuartos, conectado, eventosLog, silenciarAlarma, cerrarPuerta } = useSocket()
 
   const hora = new Date().toLocaleTimeString('es-MX', {
     hour: '2-digit',
@@ -73,6 +73,8 @@ export function Dashboard() {
               key={id}
               cuartoId={Number(id)}
               datos={datos}
+              onSilenciar={silenciarAlarma}
+              onCerrarPuerta={cerrarPuerta}
             />
           ))}
         </div>
@@ -161,12 +163,23 @@ export function Dashboard() {
           <div className="dashboard__log">
             <h2 className="dashboard__log-titulo">LOG DE EVENTOS</h2>
             <div className="dashboard__log-entries">
-              <div className="dashboard__log-entry">
-                <span className="dashboard__log-hora">--:--:--</span>
-                <span style={{ color: 'var(--text-cyan)' }}>
-                  Sistema iniciado — esperando datos
-                </span>
-              </div>
+              {eventosLog.slice().reverse().map((ev) => {
+                const getEventColor = () => {
+                  if (ev.tipo === 'critica') return 'var(--color-critica)'
+                  if (ev.tipo === 'preventiva') return 'var(--color-preventiva)'
+                  return 'var(--text-cyan)'
+                }
+                const eventColor = getEventColor()
+
+                return (
+                  <div key={ev.id} className="dashboard__log-entry">
+                    <span className="dashboard__log-hora">{ev.hora}</span>
+                    <span style={{ color: eventColor }}>
+                      {ev.cuartoId ? `[C${ev.cuartoId}] ` : ''}{ev.descripcion}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
 
