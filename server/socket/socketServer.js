@@ -142,6 +142,30 @@ export function initSocketServer(httpServer) {
       }
     })
 
+    socket.on('forzar_cierre', (payload = {}) => {
+      const cuartoId = Number(payload.cuartoId)
+      if (!Number.isInteger(cuartoId) || cuartoId < 1 || cuartoId > 5) {
+        return
+      }
+
+      const operadorId = sanitizeOperadorId(payload.operadorId)
+      const timestamp = payload.timestamp || new Date().toISOString()
+
+      try {
+        publishMqtt(`sei/cuartos/${cuartoId}/puerta/cmd`, {
+          cuarto_id: cuartoId,
+          timestamp,
+          comando: 'forzar_cierre',
+          operador_id: operadorId
+        }, {
+          qos: 1,
+          retain: false
+        })
+      } catch (err) {
+        console.error('[SOCKET] No se pudo publicar forzar_cierre:', err.message)
+      }
+    })
+
     socket.on('disconnect', () => {
       console.log(`[SOCKET] Cliente desconectado: ${socket.id}`)
     })
