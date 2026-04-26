@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { io } from 'socket.io-client'
+import { useAuth } from '../context/AuthContext'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000'
 const TIMEOUT_MS = 65000
 const USAR_DATOS_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
-const OPERADOR_ID = Number.parseInt(import.meta.env.VITE_OPERADOR_ID || '1', 10)
 
 const datosMock = {
   1: { temperatura: -2.5, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: Date.now(), sinSenal: false },
@@ -27,6 +27,7 @@ const formatHora = () => new Date().toLocaleTimeString('es-MX', {
 })
 
 export function useSocket() {
+  const { token, user } = useAuth()
   const nextEventoIdRef = useRef(2)
   const [cuartos, setCuartos] = useState(USAR_DATOS_MOCK ? datosMock : estadoInicial)
   const [conectado, setConectado] = useState(USAR_DATOS_MOCK)
@@ -79,25 +80,37 @@ export function useSocket() {
 
   // Función para emitir comandos al backend vía socket
   const emitirComando = useCallback((evento, payload) => {
-    if (socketRef.current?.connected) {
-      socketRef.current.emit(evento, payload)
-      agregarEvento(payload.cuartoId, `Comando: ${evento} → Cuarto ${payload.cuartoId}`, 'info')
-    } else {
-      console.warn('Socket no conectado — comando descartado:', evento, payload)
+    if (!token || !user) {
+      console.warn('Comando descartado — sin sesion activa:', evento)
+      return
     }
-  }, [agregarEvento])
+    if (!socketRef.current?.connected) {
+      console.warn('Socket no conectado — comando descartado:', evento, payload)
+      return
+    }
+    const payloadConAuth = {
+      ...payload,
+      operadorId: user.operadorId,
+      operador_id: user.operadorId,
+      jwtToken: token,
+      jwt_token: token
+    }
+    socketRef.current.emit(evento, payloadConAuth)
+    agregarEvento(payload.cuartoId, `Comando: ${evento} → Cuarto ${payload.cuartoId}`, 'info')
+  }, [agregarEvento, token, user])
 
-  const silenciarAlarma = useCallback((cuartoId, operadorId = 1) => {
+  const silenciarAlarma = useCallback((cuartoId) => {
     emitirComando('silenciar_alarma', {
       cuartoId,
-      operadorId,
-      operador_id: operadorId,
       timestamp: new Date().toISOString()
     })
   }, [emitirComando])
 
-  const cerrarPuerta = useCallback((cuartoId, operadorId = 1) => {
-    emitirComando('forzar_cierre', { cuartoId, operadorId, timestamp: new Date().toISOString() })
+  const cerrarPuerta = useCallback((cuartoId) => {
+    emitirComando('forzar_cierre', {
+      cuartoId,
+      timestamp: new Date().toISOString()
+    })
   }, [emitirComando])
 
   useEffect(() => {
@@ -205,9 +218,5 @@ export function useSocket() {
     c => c.estadoAlarma === 'critica' || c.estadoAlarma === 'preventiva'
   ).length
 
-  const silenciarAlarmaConOperador = useCallback((cuartoId) => {
-    silenciarAlarma(cuartoId, Number.isInteger(OPERADOR_ID) && OPERADOR_ID > 0 ? OPERADOR_ID : 1)
-  }, [silenciarAlarma])
-
-  return { cuartos, conectado, alarmasActivas, eventosLog, silenciarAlarma: silenciarAlarmaConOperador, cerrarPuerta }
+  return { cuartos, conectado, alarmasActivas, eventosLog, silenciarAlarma, cerrarPuerta }
 }
