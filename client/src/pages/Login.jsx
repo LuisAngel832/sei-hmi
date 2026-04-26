@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
+import { httpClient } from '../api/httpClient'
 import './Login.css'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 export function Login() {
   const navigate = useNavigate()
@@ -23,7 +21,7 @@ export function Login() {
     setError(null)
     setLoading(true)
     try {
-      const { data } = await axios.post(`${API_URL}/api/login`, {
+      const { data } = await httpClient.post('/api/login', {
         usuario: usuario.trim(),
         password
       })
