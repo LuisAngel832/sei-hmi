@@ -129,6 +129,31 @@ export function useSocket() {
       agregarEvento(null, 'Desconectado del servidor', 'critica')
     })
 
+    socket.on('snapshot_inicial', ({ cuartos: snapshotCuartos }) => {
+      if (!Array.isArray(snapshotCuartos) || snapshotCuartos.length === 0) return
+      setCuartos(prev => {
+        const next = { ...prev }
+        snapshotCuartos.forEach((c) => {
+          if (!esCuartoValido(c.cuartoId)) return
+          next[c.cuartoId] = {
+            ...prev[c.cuartoId],
+            temperatura: c.temperatura,
+            estadoAlarma: c.estadoAlarma,
+            presencia: toBoolean(c.presencia),
+            puerta: c.puerta,
+            cortina: c.cortina,
+            timestamp: c.timestamp || Date.now(),
+            sinSenal: false
+          }
+        })
+        return next
+      })
+      snapshotCuartos.forEach((c) => {
+        if (esCuartoValido(c.cuartoId)) reiniciarTimeout(c.cuartoId)
+      })
+      agregarEvento(null, `Snapshot inicial — ${snapshotCuartos.length} cuartos sincronizados`, 'info')
+    })
+
     socket.on('temperatura', ({ cuartoId, temperatura, estadoAlarma, timestamp }) => {
       if (!esCuartoValido(cuartoId)) return
       setCuartos(prev => ({
