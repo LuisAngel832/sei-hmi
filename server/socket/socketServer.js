@@ -60,6 +60,21 @@ function updateSnapshot(snapshotByRoom, normalizedEvent) {
   if (!normalizedEvent) return
 
   const { event, payload } = normalizedEvent
+
+  if (event === 'snapshot_inicial') {
+    payload.cuartos?.forEach((c) => {
+      const room = snapshotByRoom[c.cuartoId]
+      if (!room) return
+      room.temperatura = c.temperatura
+      room.estadoAlarma = c.estadoAlarma
+      room.presencia = c.presencia
+      room.puerta = c.puerta
+      room.cortina = c.cortina
+      room.timestamp = c.timestamp
+    })
+    return
+  }
+
   const { cuartoId } = payload
   if (!Number.isInteger(cuartoId) || !snapshotByRoom[cuartoId]) return
 
