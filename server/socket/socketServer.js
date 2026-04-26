@@ -98,6 +98,12 @@ function sanitizeOperadorId(value) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1
 }
 
+function isJwtShaped(token) {
+  if (typeof token !== 'string') return false
+  const parts = token.split('.')
+  return parts.length === 3 && parts.every((part) => part.length > 0)
+}
+
 export function initSocketServer(httpServer) {
   const latestByRoom = {
     1: createInitialRoomState(),
@@ -124,6 +130,12 @@ export function initSocketServer(httpServer) {
         return
       }
 
+      const jwtToken = payload.jwtToken ?? payload.jwt_token
+      if (!isJwtShaped(jwtToken)) {
+        console.warn(`[SOCKET] silenciar_alarma rechazado: jwt_token ausente o invalido (cuarto ${cuartoId})`)
+        return
+      }
+
       const operadorId = sanitizeOperadorId(payload.operadorId)
       const timestamp = payload.timestamp || new Date().toISOString()
 
@@ -132,7 +144,8 @@ export function initSocketServer(httpServer) {
           cuarto_id: cuartoId,
           timestamp,
           comando: 'silenciar',
-          operador_id: operadorId
+          operador_id: operadorId,
+          jwt_token: jwtToken
         }, {
           qos: 1,
           retain: false
@@ -148,6 +161,12 @@ export function initSocketServer(httpServer) {
         return
       }
 
+      const jwtToken = payload.jwtToken ?? payload.jwt_token
+      if (!isJwtShaped(jwtToken)) {
+        console.warn(`[SOCKET] forzar_cierre rechazado: jwt_token ausente o invalido (cuarto ${cuartoId})`)
+        return
+      }
+
       const operadorId = sanitizeOperadorId(payload.operadorId)
       const timestamp = payload.timestamp || new Date().toISOString()
 
@@ -156,7 +175,8 @@ export function initSocketServer(httpServer) {
           cuarto_id: cuartoId,
           timestamp,
           comando: 'forzar_cierre',
-          operador_id: operadorId
+          operador_id: operadorId,
+          jwt_token: jwtToken
         }, {
           qos: 1,
           retain: false
