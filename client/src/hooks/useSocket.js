@@ -210,16 +210,24 @@ export function useSocket() {
 
     socket.on('puerta', ({ cuartoId, estado, origen, timestamp }) => {
       if (!esCuartoValido(cuartoId)) return
-      setCuartos(prev => ({
-        ...prev,
-        [cuartoId]: {
-          ...prev[cuartoId],
-          puerta: estado || prev[cuartoId].puerta,
-          timestamp: timestamp || prev[cuartoId].timestamp,
-          sinSenal: false
+      setCuartos(prev => {
+        const previo = prev[cuartoId]
+        const cerrandoIniciadoEn = estado === 'cerrando'
+          ? Date.now()
+          : null
+        return {
+          ...prev,
+          [cuartoId]: {
+            ...previo,
+            puerta: estado || previo.puerta,
+            cerrandoIniciadoEn,
+            timestamp: timestamp || previo.timestamp,
+            sinSenal: false
+          }
         }
-      }))
-      agregarEvento(cuartoId, `Puerta Cuarto ${cuartoId}: ${estado} (${origen || 'manual'})`, 'info')
+      })
+      const tipoEvento = estado === 'cerrando' || estado === 'cierre_cancelado' ? 'preventiva' : 'info'
+      agregarEvento(cuartoId, `Puerta Cuarto ${cuartoId}: ${estado} (${origen || 'manual'})`, tipoEvento)
       reiniciarTimeout(cuartoId)
     })
 
