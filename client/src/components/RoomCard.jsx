@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import './RoomCard.css'
 
-export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta }) {
+export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta, onForzarRefrigeracion }) {
   const {
     temperatura,
     estadoAlarma = 'normal',
@@ -73,6 +73,7 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
   const esSupervisor = userRol === 'supervisor'
   const showSilenciarBtn = estadoAlarma === 'critica' && esSupervisor
   const showCerrarBtn = estadoAlarma === 'critica' && puerta === 'abierta'
+  const showForzarBtn = esSupervisor && typeof temperatura === 'number' && temperatura > 3
 
   return (
     <div className={`room-card room-card--${estadoAlarma}`}>
@@ -193,6 +194,14 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
             Silenciar<br />Alarma
           </button>
         )}
+        {showForzarBtn && (
+          <button
+            className="room-card__btn room-card__btn--forzar"
+            onClick={() => onForzarRefrigeracion?.(cuartoId)}
+          >
+            Forzar<br />Refrigeración
+          </button>
+        )}
       </div>
 
     </div>
@@ -212,5 +221,6 @@ RoomCard.propTypes = {
   }).isRequired,
   userRol: PropTypes.oneOf(['operador', 'supervisor']),
   onSilenciar: PropTypes.func,
-  onCerrarPuerta: PropTypes.func
+  onCerrarPuerta: PropTypes.func,
+  onForzarRefrigeracion: PropTypes.func
 }
