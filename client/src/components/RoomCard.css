@@ -236,3 +236,54 @@
 .room-card__btn--forzar:hover {
   background: rgba(34, 211, 238, 0.2);
 }
+
+/* Countdown de cierre automatico (HU-07) */
+.room-card__cierre {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.room-card__cierre-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.room-card__cierre-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--color-critica);
+}
+
+.room-card__cierre-segundos {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-critica);
+}
+
+.room-card__cierre-bar-bg {
+  height: 4px;
+  background: rgba(239, 68, 68, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.room-card__cierre-bar-fill {
+  height: 100%;
+  background: var(--color-critica);
+  transition: width 0.18s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-card__cierre-bar-fill {
+    transition: none;
+  }
+}

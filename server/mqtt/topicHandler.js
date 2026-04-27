@@ -82,6 +82,13 @@ export function handleMessage(topic, data, io) {
 
     case 'puerta':
     {
+      // Estados validos del contrato E7 v2.0:
+      //   'abierta' | 'cerrada' | 'cerrando' | 'cierre_cancelado'
+      const ESTADOS_PUERTA = new Set(['abierta', 'cerrada', 'cerrando', 'cierre_cancelado'])
+      if (!ESTADOS_PUERTA.has(data.estado)) {
+        console.warn(`[HANDLER] Estado de puerta desconocido en ${topic}: ${data.estado}`)
+        return null
+      }
       const payload = {
         cuartoId,
         estado: data.estado,
