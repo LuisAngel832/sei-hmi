@@ -1,0 +1,110 @@
+.confirm-dialog__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 20, 0.78);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+  animation: confirm-overlay-in 0.15s ease-out;
+}
+
+.confirm-dialog__card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  animation: confirm-card-in 0.18s ease-out;
+}
+
+.confirm-dialog__titulo {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.confirm-dialog__mensaje {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.confirm-dialog__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.confirm-dialog__btn {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.confirm-dialog__btn:hover {
+  opacity: 0.88;
+}
+
+.confirm-dialog__btn:focus-visible {
+  outline: 2px solid var(--text-cyan);
+  outline-offset: 2px;
+}
+
+.confirm-dialog__btn--cancelar {
+  background: transparent;
+  border-color: var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.confirm-dialog__btn--primario {
+  background: var(--text-cyan);
+  border-color: var(--text-cyan);
+  color: var(--bg-app);
+}
+
+.confirm-dialog__btn--critico {
+  background: var(--color-critica);
+  border-color: var(--color-critica);
+  color: #ffffff;
+}
+
+@keyframes confirm-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes confirm-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm-dialog__overlay,
+  .confirm-dialog__card {
+    animation: none;
+  }
+}

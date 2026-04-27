@@ -1,8 +1,10 @@
+import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../hooks/useSocket'
 import { Header } from '../components/Header'
 import { RoomCard } from '../components/RoomCard'
 
 export function Home() {
+  const { user } = useAuth()
   const { cuartos, conectado, alarmasActivas, silenciarAlarma, cerrarPuerta } = useSocket()
 
   return (
@@ -15,6 +17,7 @@ export function Home() {
               key={id}
               cuartoId={id}
               datos={cuartos[id]}
+              userRol={user?.rol}
               onSilenciar={silenciarAlarma}
               onCerrarPuerta={cerrarPuerta}
             />

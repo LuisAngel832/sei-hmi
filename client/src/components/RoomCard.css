@@ -226,3 +226,13 @@
   border-color: rgba(239, 68, 68, 0.15);
   color: var(--color-critica);
 }
+
+.room-card__btn--forzar {
+  background: rgba(34, 211, 238, 0.12);
+  border-color: rgba(34, 211, 238, 0.35);
+  color: var(--text-cyan);
+}
+
+.room-card__btn--forzar:hover {
+  background: rgba(34, 211, 238, 0.2);
+}
