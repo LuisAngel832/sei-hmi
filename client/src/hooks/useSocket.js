@@ -92,6 +92,7 @@ export function useSocket() {
       ...payload,
       operadorId: user.operadorId,
       operador_id: user.operadorId,
+      rol: user.rol,
       jwtToken: token,
       jwt_token: token
     }
@@ -109,6 +110,15 @@ export function useSocket() {
   const cerrarPuerta = useCallback((cuartoId) => {
     emitirComando('forzar_cierre', {
       cuartoId,
+      timestamp: new Date().toISOString()
+    })
+  }, [emitirComando])
+
+  const forzarRefrigeracion = useCallback((cuartoId, potenciaPct = 100) => {
+    emitirComando('forzar_refrigeracion', {
+      cuartoId,
+      potenciaPct,
+      potencia_pct: potenciaPct,
       timestamp: new Date().toISOString()
     })
   }, [emitirComando])
@@ -243,5 +253,13 @@ export function useSocket() {
     c => c.estadoAlarma === 'critica' || c.estadoAlarma === 'preventiva'
   ).length
 
-  return { cuartos, conectado, alarmasActivas, eventosLog, silenciarAlarma, cerrarPuerta }
+  return {
+    cuartos,
+    conectado,
+    alarmasActivas,
+    eventosLog,
+    silenciarAlarma,
+    cerrarPuerta,
+    forzarRefrigeracion
+  }
 }
