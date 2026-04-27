@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { io } from 'socket.io-client'
+import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000'
 const TIMEOUT_MS = 65000
 const USAR_DATOS_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
-const OPERADOR_ID = Number.parseInt(import.meta.env.VITE_OPERADOR_ID || '1', 10)
 
 const datosMock = {
   1: { temperatura: -2.5, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: Date.now(), sinSenal: false },
@@ -27,6 +28,8 @@ const formatHora = () => new Date().toLocaleTimeString('es-MX', {
 })
 
 export function useSocket() {
+  const { token, user } = useAuth()
+  const { showToast } = useToast()
   const nextEventoIdRef = useRef(2)
   const [cuartos, setCuartos] = useState(USAR_DATOS_MOCK ? datosMock : estadoInicial)
   const [conectado, setConectado] = useState(USAR_DATOS_MOCK)
@@ -79,25 +82,47 @@ export function useSocket() {
 
   // Función para emitir comandos al backend vía socket
   const emitirComando = useCallback((evento, payload) => {
-    if (socketRef.current?.connected) {
-      socketRef.current.emit(evento, payload)
-      agregarEvento(payload.cuartoId, `Comando: ${evento} → Cuarto ${payload.cuartoId}`, 'info')
-    } else {
-      console.warn('Socket no conectado — comando descartado:', evento, payload)
+    if (!token || !user) {
+      console.warn('Comando descartado — sin sesion activa:', evento)
+      return
     }
-  }, [agregarEvento])
+    if (!socketRef.current?.connected) {
+      console.warn('Socket no conectado — comando descartado:', evento, payload)
+      return
+    }
+    const payloadConAuth = {
+      ...payload,
+      operadorId: user.operadorId,
+      operador_id: user.operadorId,
+      rol: user.rol,
+      jwtToken: token,
+      jwt_token: token
+    }
+    socketRef.current.emit(evento, payloadConAuth)
+    agregarEvento(payload.cuartoId, `Comando: ${evento} → Cuarto ${payload.cuartoId}`, 'info')
+  }, [agregarEvento, token, user])
 
-  const silenciarAlarma = useCallback((cuartoId, operadorId = 1) => {
+  const silenciarAlarma = useCallback((cuartoId) => {
     emitirComando('silenciar_alarma', {
       cuartoId,
-      operadorId,
-      operador_id: operadorId,
       timestamp: new Date().toISOString()
     })
   }, [emitirComando])
 
-  const cerrarPuerta = useCallback((cuartoId, operadorId = 1) => {
-    emitirComando('forzar_cierre', { cuartoId, operadorId, timestamp: new Date().toISOString() })
+  const cerrarPuerta = useCallback((cuartoId) => {
+    emitirComando('forzar_cierre', {
+      cuartoId,
+      timestamp: new Date().toISOString()
+    })
+  }, [emitirComando])
+
+  const forzarRefrigeracion = useCallback((cuartoId, potenciaPct = 100) => {
+    emitirComando('forzar_refrigeracion', {
+      cuartoId,
+      potenciaPct,
+      potencia_pct: potenciaPct,
+      timestamp: new Date().toISOString()
+    })
   }, [emitirComando])
 
   useEffect(() => {
@@ -114,6 +139,31 @@ export function useSocket() {
     socket.on('disconnect', () => {
       setConectado(false)
       agregarEvento(null, 'Desconectado del servidor', 'critica')
+    })
+
+    socket.on('snapshot_inicial', ({ cuartos: snapshotCuartos }) => {
+      if (!Array.isArray(snapshotCuartos) || snapshotCuartos.length === 0) return
+      setCuartos(prev => {
+        const next = { ...prev }
+        snapshotCuartos.forEach((c) => {
+          if (!esCuartoValido(c.cuartoId)) return
+          next[c.cuartoId] = {
+            ...prev[c.cuartoId],
+            temperatura: c.temperatura,
+            estadoAlarma: c.estadoAlarma,
+            presencia: toBoolean(c.presencia),
+            puerta: c.puerta,
+            cortina: c.cortina,
+            timestamp: c.timestamp || Date.now(),
+            sinSenal: false
+          }
+        })
+        return next
+      })
+      snapshotCuartos.forEach((c) => {
+        if (esCuartoValido(c.cuartoId)) reiniciarTimeout(c.cuartoId)
+      })
+      agregarEvento(null, `Snapshot inicial — ${snapshotCuartos.length} cuartos sincronizados`, 'info')
     })
 
     socket.on('temperatura', ({ cuartoId, temperatura, estadoAlarma, timestamp }) => {
@@ -162,16 +212,37 @@ export function useSocket() {
 
     socket.on('puerta', ({ cuartoId, estado, origen, timestamp }) => {
       if (!esCuartoValido(cuartoId)) return
-      setCuartos(prev => ({
-        ...prev,
-        [cuartoId]: {
-          ...prev[cuartoId],
-          puerta: estado || prev[cuartoId].puerta,
-          timestamp: timestamp || prev[cuartoId].timestamp,
-          sinSenal: false
+      setCuartos(prev => {
+        const previo = prev[cuartoId]
+        const cerrandoIniciadoEn = estado === 'cerrando'
+          ? Date.now()
+          : null
+        return {
+          ...prev,
+          [cuartoId]: {
+            ...previo,
+            puerta: estado || previo.puerta,
+            cerrandoIniciadoEn,
+            timestamp: timestamp || previo.timestamp,
+            sinSenal: false
+          }
         }
-      }))
-      agregarEvento(cuartoId, `Puerta Cuarto ${cuartoId}: ${estado} (${origen || 'manual'})`, 'info')
+      })
+      const tipoEvento = estado === 'cerrando' || estado === 'cierre_cancelado' ? 'preventiva' : 'info'
+      agregarEvento(cuartoId, `Puerta Cuarto ${cuartoId}: ${estado} (${origen || 'manual'})`, tipoEvento)
+
+      if (estado === 'cierre_cancelado') {
+        showToast(`Cierre automatico cancelado en Cuarto ${cuartoId} — presencia detectada.`, {
+          tipo: 'preventiva',
+          duracion: 5000
+        })
+      } else if (estado === 'cerrando') {
+        showToast(`Cierre automatico iniciado en Cuarto ${cuartoId}.`, {
+          tipo: 'critica',
+          duracion: 4000
+        })
+      }
+
       reiniciarTimeout(cuartoId)
     })
 
@@ -205,9 +276,13 @@ export function useSocket() {
     c => c.estadoAlarma === 'critica' || c.estadoAlarma === 'preventiva'
   ).length
 
-  const silenciarAlarmaConOperador = useCallback((cuartoId) => {
-    silenciarAlarma(cuartoId, Number.isInteger(OPERADOR_ID) && OPERADOR_ID > 0 ? OPERADOR_ID : 1)
-  }, [silenciarAlarma])
-
-  return { cuartos, conectado, alarmasActivas, eventosLog, silenciarAlarma: silenciarAlarmaConOperador, cerrarPuerta }
+  return {
+    cuartos,
+    conectado,
+    alarmasActivas,
+    eventosLog,
+    silenciarAlarma,
+    cerrarPuerta,
+    forzarRefrigeracion
+  }
 }

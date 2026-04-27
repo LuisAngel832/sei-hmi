@@ -60,6 +60,21 @@ function updateSnapshot(snapshotByRoom, normalizedEvent) {
   if (!normalizedEvent) return
 
   const { event, payload } = normalizedEvent
+
+  if (event === 'snapshot_inicial') {
+    payload.cuartos?.forEach((c) => {
+      const room = snapshotByRoom[c.cuartoId]
+      if (!room) return
+      room.temperatura = c.temperatura
+      room.estadoAlarma = c.estadoAlarma
+      room.presencia = c.presencia
+      room.puerta = c.puerta
+      room.cortina = c.cortina
+      room.timestamp = c.timestamp
+    })
+    return
+  }
+
   const { cuartoId } = payload
   if (!Number.isInteger(cuartoId) || !snapshotByRoom[cuartoId]) return
 
@@ -98,6 +113,12 @@ function sanitizeOperadorId(value) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1
 }
 
+function isJwtShaped(token) {
+  if (typeof token !== 'string') return false
+  const parts = token.split('.')
+  return parts.length === 3 && parts.every((part) => part.length > 0)
+}
+
 export function initSocketServer(httpServer) {
   const latestByRoom = {
     1: createInitialRoomState(),
@@ -124,6 +145,12 @@ export function initSocketServer(httpServer) {
         return
       }
 
+      const jwtToken = payload.jwtToken ?? payload.jwt_token
+      if (!isJwtShaped(jwtToken)) {
+        console.warn(`[SOCKET] silenciar_alarma rechazado: jwt_token ausente o invalido (cuarto ${cuartoId})`)
+        return
+      }
+
       const operadorId = sanitizeOperadorId(payload.operadorId)
       const timestamp = payload.timestamp || new Date().toISOString()
 
@@ -132,7 +159,8 @@ export function initSocketServer(httpServer) {
           cuarto_id: cuartoId,
           timestamp,
           comando: 'silenciar',
-          operador_id: operadorId
+          operador_id: operadorId,
+          jwt_token: jwtToken
         }, {
           qos: 1,
           retain: false
@@ -148,6 +176,12 @@ export function initSocketServer(httpServer) {
         return
       }
 
+      const jwtToken = payload.jwtToken ?? payload.jwt_token
+      if (!isJwtShaped(jwtToken)) {
+        console.warn(`[SOCKET] forzar_cierre rechazado: jwt_token ausente o invalido (cuarto ${cuartoId})`)
+        return
+      }
+
       const operadorId = sanitizeOperadorId(payload.operadorId)
       const timestamp = payload.timestamp || new Date().toISOString()
 
@@ -156,13 +190,56 @@ export function initSocketServer(httpServer) {
           cuarto_id: cuartoId,
           timestamp,
           comando: 'forzar_cierre',
-          operador_id: operadorId
+          operador_id: operadorId,
+          jwt_token: jwtToken
         }, {
           qos: 1,
           retain: false
         })
       } catch (err) {
         console.error('[SOCKET] No se pudo publicar forzar_cierre:', err.message)
+      }
+    })
+
+    socket.on('forzar_refrigeracion', (payload = {}) => {
+      const cuartoId = Number(payload.cuartoId)
+      if (!Number.isInteger(cuartoId) || cuartoId < 1 || cuartoId > 5) {
+        return
+      }
+
+      const jwtToken = payload.jwtToken ?? payload.jwt_token
+      if (!isJwtShaped(jwtToken)) {
+        console.warn(`[SOCKET] forzar_refrigeracion rechazado: jwt_token ausente o invalido (cuarto ${cuartoId})`)
+        return
+      }
+
+      if (payload.rol !== 'supervisor') {
+        console.warn(`[SOCKET] forzar_refrigeracion rechazado: rol declarado='${payload.rol}' no es supervisor (cuarto ${cuartoId})`)
+        return
+      }
+
+      const operadorId = sanitizeOperadorId(payload.operadorId)
+      const potenciaPct = Number(payload.potenciaPct ?? payload.potencia_pct ?? 100)
+      const potenciaSegura = Number.isFinite(potenciaPct)
+        ? Math.min(Math.max(Math.round(potenciaPct), 0), 100)
+        : 100
+      const timestamp = payload.timestamp || new Date().toISOString()
+
+      try {
+        publishMqtt(`sei/cuartos/${cuartoId}/refrigeracion/cmd`, {
+          cuarto_id: cuartoId,
+          timestamp,
+          comando: 'forzar_encendido',
+          potencia_pct: potenciaSegura,
+          operador_id: operadorId,
+          rol: payload.rol,
+          jwt_token: jwtToken
+        }, {
+          qos: 1,
+          retain: false
+        })
+      } catch (err) {
+        console.error('[SOCKET] No se pudo publicar forzar_refrigeracion:', err.message)
       }
     })
 

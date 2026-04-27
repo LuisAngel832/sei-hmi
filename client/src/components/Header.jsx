@@ -1,30 +1,39 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import PropTypes from 'prop-types'
+import { useAuth } from '../context/AuthContext'
 import './Header.css'
 
 export function Header({ conectado, alarmasActivas = 0 }) {
   const [hora, setHora] = useState(new Date())
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const timer = setInterval(() => setHora(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
-  const formatHora = (fecha) => {
-    return fecha.toLocaleTimeString('es-MX', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    })
+  const formatHora = (fecha) => fecha.toLocaleTimeString('es-MX', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  })
+
+  const formatFecha = (fecha) => fecha.toLocaleDateString('es-MX', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short'
+  })
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
   }
 
-  const formatFecha = (fecha) => {
-    return fecha.toLocaleDateString('es-MX', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short'
-    })
-  }
+  const rolLabel = user?.rol === 'supervisor' ? 'Supervisor' : 'Operador'
+  const rolModifier = user?.rol === 'supervisor' ? 'header__rol--supervisor' : 'header__rol--operador'
 
   return (
     <header className="header">
@@ -57,7 +66,29 @@ export function Header({ conectado, alarmasActivas = 0 }) {
             {conectado ? 'Conectado' : 'Desconectado'}
           </span>
         </div>
+
+        {user && (
+          <div className="header__sesion">
+            <div className="header__usuario">
+              <span className="header__usuario-nombre">{user.nombre ?? `Operador #${user.operadorId}`}</span>
+              <span className={`header__rol ${rolModifier}`}>{rolLabel}</span>
+            </div>
+            <button
+              type="button"
+              className="header__logout"
+              onClick={handleLogout}
+              aria-label="Cerrar sesion"
+            >
+              Salir
+            </button>
+          </div>
+        )}
       </div>
     </header>
   )
+}
+
+Header.propTypes = {
+  conectado: PropTypes.bool,
+  alarmasActivas: PropTypes.number
 }
