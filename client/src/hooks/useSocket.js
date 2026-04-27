@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { io } from 'socket.io-client'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000'
 const TIMEOUT_MS = 65000
@@ -28,6 +29,7 @@ const formatHora = () => new Date().toLocaleTimeString('es-MX', {
 
 export function useSocket() {
   const { token, user } = useAuth()
+  const { showToast } = useToast()
   const nextEventoIdRef = useRef(2)
   const [cuartos, setCuartos] = useState(USAR_DATOS_MOCK ? datosMock : estadoInicial)
   const [conectado, setConectado] = useState(USAR_DATOS_MOCK)
@@ -228,6 +230,19 @@ export function useSocket() {
       })
       const tipoEvento = estado === 'cerrando' || estado === 'cierre_cancelado' ? 'preventiva' : 'info'
       agregarEvento(cuartoId, `Puerta Cuarto ${cuartoId}: ${estado} (${origen || 'manual'})`, tipoEvento)
+
+      if (estado === 'cierre_cancelado') {
+        showToast(`Cierre automatico cancelado en Cuarto ${cuartoId} — presencia detectada.`, {
+          tipo: 'preventiva',
+          duracion: 5000
+        })
+      } else if (estado === 'cerrando') {
+        showToast(`Cierre automatico iniciado en Cuarto ${cuartoId}.`, {
+          tipo: 'critica',
+          duracion: 4000
+        })
+      }
+
       reiniciarTimeout(cuartoId)
     })
 
