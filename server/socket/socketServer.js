@@ -201,6 +201,48 @@ export function initSocketServer(httpServer) {
       }
     })
 
+    socket.on('forzar_refrigeracion', (payload = {}) => {
+      const cuartoId = Number(payload.cuartoId)
+      if (!Number.isInteger(cuartoId) || cuartoId < 1 || cuartoId > 5) {
+        return
+      }
+
+      const jwtToken = payload.jwtToken ?? payload.jwt_token
+      if (!isJwtShaped(jwtToken)) {
+        console.warn(`[SOCKET] forzar_refrigeracion rechazado: jwt_token ausente o invalido (cuarto ${cuartoId})`)
+        return
+      }
+
+      if (payload.rol !== 'supervisor') {
+        console.warn(`[SOCKET] forzar_refrigeracion rechazado: rol declarado='${payload.rol}' no es supervisor (cuarto ${cuartoId})`)
+        return
+      }
+
+      const operadorId = sanitizeOperadorId(payload.operadorId)
+      const potenciaPct = Number(payload.potenciaPct ?? payload.potencia_pct ?? 100)
+      const potenciaSegura = Number.isFinite(potenciaPct)
+        ? Math.min(Math.max(Math.round(potenciaPct), 0), 100)
+        : 100
+      const timestamp = payload.timestamp || new Date().toISOString()
+
+      try {
+        publishMqtt(`sei/cuartos/${cuartoId}/refrigeracion/cmd`, {
+          cuarto_id: cuartoId,
+          timestamp,
+          comando: 'forzar_encendido',
+          potencia_pct: potenciaSegura,
+          operador_id: operadorId,
+          rol: payload.rol,
+          jwt_token: jwtToken
+        }, {
+          qos: 1,
+          retain: false
+        })
+      } catch (err) {
+        console.error('[SOCKET] No se pudo publicar forzar_refrigeracion:', err.message)
+      }
+    })
+
     socket.on('disconnect', () => {
       console.log(`[SOCKET] Cliente desconectado: ${socket.id}`)
     })
