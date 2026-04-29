@@ -12,6 +12,7 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
     puerta = 'cerrada',
     cortina = 'inactiva',
     refrigeracion = 100,
+    motivoRefrigeracion = 'NORMAL',
     cerrandoIniciadoEn = null
   } = datos
 
@@ -201,13 +202,32 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
       </div>
 
       {/* Refrigeración */}
-      <div className="room-card__refrig">
-        <span className="room-card__sensor-label">REFRIGERACIÓN</span>
+      <div className={`room-card__refrig${motivoRefrigeracion !== 'NORMAL' ? ' room-card__refrig--activo' : ''}`}>
+        <div className="room-card__refrig-header">
+          <span className="room-card__sensor-label">REFRIGERACIÓN</span>
+          {motivoRefrigeracion === 'PUERTA_ABIERTA' && (
+            <span className="room-card__refrig-badge room-card__refrig-badge--puerta">
+              PUERTA ABIERTA
+            </span>
+          )}
+          {motivoRefrigeracion === 'FORZADO_MANUAL' && (
+            <span className="room-card__refrig-badge room-card__refrig-badge--forzado">
+              FORZADO
+            </span>
+          )}
+        </div>
         <div className="room-card__refrig-bar-wrap">
           <div className="room-card__temp-bar-bg" />
           <div
             className="room-card__temp-bar-fill"
-            style={{ width: `${Math.min(Math.max(refrigeracion, 0), 100)}%`, background: 'var(--text-cyan)' }}
+            style={{
+              width: `${Math.min(Math.max(refrigeracion, 0), 100)}%`,
+              background: motivoRefrigeracion === 'PUERTA_ABIERTA'
+                ? 'var(--color-critica)'
+                : motivoRefrigeracion === 'FORZADO_MANUAL'
+                  ? 'var(--color-preventiva)'
+                  : 'var(--text-cyan)'
+            }}
           />
         </div>
         <span className="room-card__refrig-value">{refrigeracion}%</span>
@@ -258,6 +278,7 @@ RoomCard.propTypes = {
     puerta: PropTypes.string,
     cortina: PropTypes.string,
     refrigeracion: PropTypes.number,
+    motivoRefrigeracion: PropTypes.oneOf(['NORMAL', 'PUERTA_ABIERTA', 'FORZADO_MANUAL']),
     sinSenal: PropTypes.bool,
     cerrandoIniciadoEn: PropTypes.number
   }).isRequired,
