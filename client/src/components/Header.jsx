@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, NavLink } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import { useAuth } from '../context/AuthContext'
 import './Header.css'
@@ -45,6 +45,23 @@ export function Header({ conectado, alarmasActivas = 0 }) {
           <h1 className="header__title">SEI Monitor</h1>
           <span className="header__subtitle">Cuartos Frios</span>
         </div>
+        <nav className="header__nav" aria-label="Navegacion principal">
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => `header__nav-link${isActive ? ' header__nav-link--activo' : ''}`}
+          >
+            Panel
+          </NavLink>
+          {user?.rol === 'supervisor' && (
+            <NavLink
+              to="/historial"
+              className={({ isActive }) => `header__nav-link${isActive ? ' header__nav-link--activo' : ''}`}
+            >
+              Auditoria
+            </NavLink>
+          )}
+        </nav>
       </div>
 
       <div className="header__status">
