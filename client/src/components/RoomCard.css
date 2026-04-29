@@ -189,6 +189,43 @@
   align-self: flex-end;
 }
 
+.room-card__refrig--activo .room-card__refrig-value {
+  color: var(--color-critica);
+}
+
+.room-card__refrig-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-card__refrig-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.room-card__refrig-badge--puerta {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: var(--color-critica);
+}
+
+.room-card__refrig-badge--forzado {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: var(--color-preventiva);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-card__refrig-badge {
+    animation: none;
+  }
+}
+
 /* Botones */
 .room-card__actions {
   display: flex;

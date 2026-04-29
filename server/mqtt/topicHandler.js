@@ -111,8 +111,24 @@ export function handleMessage(topic, data, io) {
       return { event: 'cortina', payload }
     }
 
+    case 'refrigeracion':
+    {
+      // Ignorar refrigeracion/cmd y cualquier subtopico que no sea /estado
+      if (parts[4] !== 'estado') return null
+      const MOTIVOS_VALIDOS = new Set(['NORMAL', 'PUERTA_ABIERTA', 'FORZADO_MANUAL'])
+      const motivo = MOTIVOS_VALIDOS.has(data.motivo) ? data.motivo : 'NORMAL'
+      const payload = {
+        cuartoId,
+        potenciaPct: typeof data.potencia_pct === 'number' ? data.potencia_pct : 100,
+        motivo,
+        timestamp: data.timestamp
+      }
+      io.emit('refrigeracion', payload)
+      return { event: 'refrigeracion', payload }
+    }
+
     default:
-      // Tópicos de comando (puerta/cmd, refrigeracion/cmd) — el HMI no los procesa
+      // Tópicos de comando (puerta/cmd, alarma/cmd) — el HMI no los procesa
       return null
   }
 }

@@ -8,19 +8,19 @@ const TIMEOUT_MS = 65000
 const USAR_DATOS_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 const datosMock = {
-  1: { temperatura: -2.5, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: Date.now(), sinSenal: false },
-  2: { temperatura: 1.2, estadoAlarma: 'normal', presencia: true, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: Date.now(), sinSenal: false },
-  3: { temperatura: 3.5, estadoAlarma: 'preventiva', presencia: false, puerta: 'abierta', cortina: 'activa', refrigeracion: 100, timestamp: Date.now(), sinSenal: false },
-  4: { temperatura: 5.1, estadoAlarma: 'critica', presencia: true, puerta: 'abierta', cortina: 'activa', refrigeracion: 100, timestamp: Date.now(), sinSenal: false },
-  5: { temperatura: -1.8, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: Date.now(), sinSenal: false }
+  1: { temperatura: -2.5, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, motivoRefrigeracion: 'NORMAL', timestamp: Date.now(), sinSenal: false },
+  2: { temperatura: 1.2, estadoAlarma: 'normal', presencia: true, puerta: 'abierta', cortina: 'inactiva', refrigeracion: 100, motivoRefrigeracion: 'PUERTA_ABIERTA', timestamp: Date.now(), sinSenal: false },
+  3: { temperatura: 3.5, estadoAlarma: 'preventiva', presencia: false, puerta: 'abierta', cortina: 'activa', refrigeracion: 100, motivoRefrigeracion: 'PUERTA_ABIERTA', timestamp: Date.now(), sinSenal: false },
+  4: { temperatura: 5.1, estadoAlarma: 'critica', presencia: true, puerta: 'abierta', cortina: 'activa', refrigeracion: 100, motivoRefrigeracion: 'FORZADO_MANUAL', timestamp: Date.now(), sinSenal: false },
+  5: { temperatura: -1.8, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, motivoRefrigeracion: 'NORMAL', timestamp: Date.now(), sinSenal: false }
 }
 
 const estadoInicial = {
-  1: { temperatura: null, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: null, sinSenal: false },
-  2: { temperatura: null, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: null, sinSenal: false },
-  3: { temperatura: null, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: null, sinSenal: false },
-  4: { temperatura: null, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: null, sinSenal: false },
-  5: { temperatura: null, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, timestamp: null, sinSenal: false }
+  1: { temperatura: null, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, motivoRefrigeracion: 'NORMAL', timestamp: null, sinSenal: false },
+  2: { temperatura: null, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, motivoRefrigeracion: 'NORMAL', timestamp: null, sinSenal: false },
+  3: { temperatura: null, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, motivoRefrigeracion: 'NORMAL', timestamp: null, sinSenal: false },
+  4: { temperatura: null, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, motivoRefrigeracion: 'NORMAL', timestamp: null, sinSenal: false },
+  5: { temperatura: null, estadoAlarma: 'normal', presencia: false, puerta: 'cerrada', cortina: 'inactiva', refrigeracion: 100, motivoRefrigeracion: 'NORMAL', timestamp: null, sinSenal: false }
 }
 
 const formatHora = () => new Date().toLocaleTimeString('es-MX', {
@@ -255,11 +255,15 @@ export function useSocket() {
       agregarEvento(cuartoId, `Cortina Cuarto ${cuartoId}: ${estado}`, 'info')
     })
 
-    socket.on('refrigeracion', ({ cuartoId, potenciaPct }) => {
+    socket.on('refrigeracion', ({ cuartoId, potenciaPct, motivo }) => {
       if (!esCuartoValido(cuartoId)) return
       setCuartos(prev => ({
         ...prev,
-        [cuartoId]: { ...prev[cuartoId], refrigeracion: potenciaPct }
+        [cuartoId]: {
+          ...prev[cuartoId],
+          refrigeracion: typeof potenciaPct === 'number' ? potenciaPct : prev[cuartoId].refrigeracion,
+          motivoRefrigeracion: motivo || prev[cuartoId].motivoRefrigeracion
+        }
       }))
     })
 
