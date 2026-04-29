@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react'
 import { Header } from '../components/Header'
 import { TablaHistorial } from '../components/TablaHistorial'
+import { LogIntervenciones } from '../components/LogIntervenciones'
 import { obtenerHistorial, descargarCsvHistorial } from '../api/historial'
+import { useAuth } from '../context/AuthContext'
 import './HistorialPanel.css'
 
 const CUARTOS = [1, 2, 3, 4, 5]
@@ -12,6 +14,8 @@ const RANGOS = [
 ]
 
 export function HistorialPanel() {
+  const { user } = useAuth()
+  const [tabActiva, setTabActiva]   = useState('historial')
   const [cuartoId, setCuartoId]     = useState(1)
   const [rango, setRango]           = useState('24h')
   const [lecturas, setLecturas]     = useState([])
@@ -56,6 +60,29 @@ export function HistorialPanel() {
 
       <main className="historial-main">
         <div className="historial-card">
+          <div className="historial-tabs" role="tablist" aria-label="Panel de auditoria">
+            <button
+              role="tab"
+              aria-selected={tabActiva === 'historial'}
+              className={`historial-tab${tabActiva === 'historial' ? ' historial-tab--activo' : ''}`}
+              onClick={() => setTabActiva('historial')}
+            >
+              Historial de Temperatura
+            </button>
+            <button
+              role="tab"
+              aria-selected={tabActiva === 'intervenciones'}
+              className={`historial-tab${tabActiva === 'intervenciones' ? ' historial-tab--activo' : ''}`}
+              onClick={() => setTabActiva('intervenciones')}
+            >
+              Intervenciones Manuales
+            </button>
+          </div>
+
+          {tabActiva === 'intervenciones' ? (
+            <LogIntervenciones userRol={user?.rol} />
+          ) : (
+            <>
           <h2 className="historial-card__titulo">Historial de Temperatura</h2>
           <p className="historial-card__subtitulo">
             Consulta y exporta lecturas de temperatura por cuarto. Disponible para operador y supervisor.
@@ -139,6 +166,8 @@ export function HistorialPanel() {
             <div className="historial-vacio">
               Selecciona un cuarto y un rango, luego haz click en <strong>Consultar</strong>.
             </div>
+          )}
+            </>
           )}
         </div>
       </main>
