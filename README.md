@@ -38,14 +38,14 @@ construidos por equipos separados.
 sei-hmi/
 |-- client/                 # React + Vite
 |   |-- src/
-|   |   |-- api/            # httpClient (axios + interceptor Bearer)
-|   |   |-- components/     # Header, RoomCard, ConfirmDialog
+|   |   |-- api/            # httpClient, historial.js, intervenciones.js + mocks/
+|   |   |-- components/     # Header, RoomCard, ConfirmDialog, TablaHistorial, LogIntervenciones
 |   |   |-- context/        # AuthContext, ToastContext
 |   |   |-- hooks/          # useSocket
-|   |   |-- pages/          # Login, Home
+|   |   |-- pages/          # Login, Home, HistorialPanel
 |   |   |-- routes/         # ProtectedRoute
 |   |   `-- App.jsx, main.jsx
-|   `-- docs/tests/         # Checklists manuales (HU-13, HU-10, HU-07)
+|   `-- docs/tests/         # Checklists manuales (HU-13, HU-10, HU-07, HU-08, HU-11, HU-12)
 |-- server/                 # Bridge MQTT <-> Socket.IO
 |   |-- mqtt/               # cliente MQTT y topic handler
 |   |-- socket/             # servidor Socket.IO con validacion de comandos
@@ -115,15 +115,19 @@ El cliente queda en `http://localhost:5173/`.
 
 ### Comportamiento por rol
 
-| Capacidad                              | Operador | Supervisor |
-|----------------------------------------|----------|------------|
-| Ver estado de los 5 cuartos            | si       | si         |
-| Recibir alarmas preventiva / critica   | si       | si         |
-| Ver countdown de cierre automatico     | si       | si         |
-| Ver toasts de cierre / cancelacion     | si       | si         |
-| Boton **Silenciar Alarma** (critica)   | no       | si         |
-| Boton **Forzar Refrigeracion** (>3 C)  | no       | si         |
-| Cerrar sesion                          | si       | si         |
+| Capacidad                                           | Operador | Supervisor |
+|-----------------------------------------------------|----------|------------|
+| Ver estado de los 5 cuartos                         | si       | si         |
+| Ver indicador de potencia y motivo de refrigeracion | si       | si         |
+| Recibir alarmas preventiva / critica                | si       | si         |
+| Ver countdown de cierre automatico                  | si       | si         |
+| Ver toasts de cierre / cancelacion                  | si       | si         |
+| Boton **Silenciar Alarma** (critica)                | no       | si         |
+| Boton **Forzar Refrigeracion** (>3 C)               | no       | si         |
+| Panel **Historial** (temperaturas + CSV)            | si       | si         |
+| Log de intervenciones (propias)                     | si       | si         |
+| Log de intervenciones (todas)                       | no       | si         |
+| Cerrar sesion                                       | si       | si         |
 
 La proteccion en el HMI es defensa en profundidad. La autoridad final esta en el backend
 Java, que valida la firma del JWT y rechaza comandos cuyo `rol` declarado en payload no
@@ -147,6 +151,8 @@ Topicos consumidos por el HMI (publicados por el simulador o el backend):
 - `sei/cuartos/{n}/alarma` — `{normal|preventiva|critica}` publicado por el backend.
 - `sei/cuartos/{n}/puerta` — `{abierta|cerrada|cerrando|cierre_cancelado}`.
 - `sei/cuartos/{n}/cortina` — `{activa|inactiva}`.
+- `sei/cuartos/{n}/refrigeracion/estado` — `{ cuarto_id, potencia_pct, motivo, timestamp }` con
+  `motivo ∈ {NORMAL, PUERTA_ABIERTA, FORZADO_MANUAL}`.
 - `sei/sistema/estado` — snapshot global publicado por el backend al arrancar.
 
 Topicos publicados por el HMI (comandos):
@@ -157,6 +163,35 @@ Topicos publicados por el HMI (comandos):
 
 Ver el contrato completo en `10_E7_Contrato_MQTT.docx`.
 
+## Panel de auditoria (Sprint 4)
+
+La ruta `/historial` (protegida, ambos roles) centraliza dos pestanas:
+
+### Historial de temperaturas — HU-11
+- Selector de cuarto (1–5) y selector de rango (`24h / 7d / 30d`).
+- Boton **Consultar** llama a `GET /api/cuartos/{id}/historial?rango=<rango>`.
+- Tabla `TablaHistorial` con paginacion cliente (50 filas/pagina).
+- Boton **Exportar CSV** visible solo tras consulta exitosa; descarga via blob en el
+  navegador sin pasar por el servidor.
+- Modo mock activable con `VITE_USE_MOCK_API=true` en `client/.env.local` para
+  desarrollo sin backend real.
+
+### Log de intervenciones manuales — HU-12
+- Componente `LogIntervenciones` con tabla auditable: Timestamp, Tipo de accion,
+  Cuarto, Operador ID, Rol en ejecucion.
+- Filtrado de visibilidad por rol: el operador solo ve sus propias intervenciones
+  (`operador_id` del JWT); el supervisor ve todas.
+- Selector de cuarto opcional (0 = todos los cuartos).
+- Mock configurable con `VITE_USE_MOCK_API=true`.
+
+### Indicador de potencia de refrigeracion — HU-08
+El bridge enruta `sei/cuartos/{n}/refrigeracion/estado` al evento Socket.IO
+`refrigeracion`. `RoomCard` muestra un badge con el porcentaje de potencia y un icono
+diferenciado segun `motivo`:
+- `NORMAL` — cyan.
+- `PUERTA_ABIERTA` — ambar.
+- `FORZADO_MANUAL` — rojo.
+
 ## Checklists manuales
 
 Cada Historia de Usuario tiene su checklist de validacion en `client/docs/tests/`:
@@ -164,6 +199,10 @@ Cada Historia de Usuario tiene su checklist de validacion en `client/docs/tests/
 - `hu-13.md` — login, AuthContext, ProtectedRoute, JWT en REST y socket.
 - `hu-10.md` — gating por rol, modal de confirmacion, forzar refrigeracion.
 - `hu-07.md` — countdown de cierre automatico, toast de cancelacion.
+- `hu-08.md` — indicador de potencia con badge diferenciado por motivo (CP-08-A/B/C).
+- `hu-11.md` — historial de temperaturas, paginacion y exportacion CSV (CP-11-A/B).
+- `hu-12.md` — log de intervenciones con filtrado por rol (CP-12-A al CP-12-E).
+- `cp-sys-01.md` — walkthrough E2E del sistema completo para Sprint Review.
 
 Para el sprint review se ejecutan en orden y se firman.
 
