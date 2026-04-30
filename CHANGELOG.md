@@ -3,6 +3,44 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/) y
 versionado [SemVer](https://semver.org/lang/es/).
 
+## [0.4.0] - 2026-04-29 - Sprint 4
+
+Sprint orientado al panel de auditoria, historial de temperaturas con
+exportacion CSV y el indicador de potencia de refrigeracion por cuarto.
+
+### Added (HU-08 Indicador de potencia)
+- Enrutamiento del topic `sei/cuartos/{n}/refrigeracion/estado` en el
+  bridge (`topicHandler.js`, `socketServer.js` snapshot + updateSnapshot).
+- `useSocket` consume `motivo` y `potencia_pct` del evento `refrigeracion`.
+- `RoomCard` muestra badge de potencia con color diferenciado por motivo:
+  cyan (`NORMAL`), ambar (`PUERTA_ABIERTA`), rojo (`FORZADO_MANUAL`).
+
+### Added (HU-11 Historial de temperatura + CSV)
+- `api/historial.js` con `obtenerHistorial` (rangos `24h / 7d / 30d`) y
+  `descargarCsvHistorial` (descarga via blob sin pasar por el servidor).
+  Mock configurable con `VITE_USE_MOCK_API=true`.
+- Componente `TablaHistorial` con paginacion cliente (50 filas/pagina).
+- Pagina `HistorialPanel` con selector de cuarto (1–5), selector de rango
+  y boton **Exportar CSV** condicional (visible solo tras consulta exitosa).
+- Ruta `/historial` protegida y enlace en `Header`.
+
+### Added (HU-12 Log de intervenciones manuales)
+- `api/intervenciones.js` con `obtenerIntervenciones`; filtra por
+  `operador_id` cuando el rol es `operador`. Mock configurable.
+- Componente `LogIntervenciones`: tabla auditable con columnas Timestamp,
+  Tipo de accion, Cuarto, Operador ID, Rol en ejecucion; badges de color
+  por tipo; selector de cuarto opcional.
+- `LogIntervenciones` integrado como pestana del `HistorialPanel`.
+
+### Added (Documentacion)
+- `README.md` actualizado con seccion "Panel de auditoria (Sprint 4)",
+  descripcion de HU-08, HU-11 y HU-12, topic `refrigeracion/estado` y
+  tabla de capacidades por rol ampliada.
+- `client/docs/tests/hu-08.md`, `hu-11.md`, `hu-12.md` — checklists
+  manuales por HU con CPs de cada historia.
+- `client/docs/tests/cp-sys-01.md` actualizado con pasos 9b, 12, 13, 14
+  y nuevos criterios de exito para Sprint 4.
+
 ## [0.3.0] - 2026-04-27 - Sprint 3
 
 Sprint orientado a autenticacion, roles y la integracion final del
