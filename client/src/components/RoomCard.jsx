@@ -1,13 +1,36 @@
+import { useEffect, useState } from 'react'
+import PropTypes from 'prop-types'
 import './RoomCard.css'
 
-export function RoomCard({ cuartoId, datos }) {
+const CIERRE_DURACION_MS = 5000
+
+export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta, onForzarRefrigeracion }) {
   const {
     temperatura,
     estadoAlarma = 'normal',
     presencia = false,
     puerta = 'cerrada',
-    refrigeracion = 100
+    cortina = 'inactiva',
+    refrigeracion = 100,
+    motivoRefrigeracion = 'NORMAL',
+    cerrandoIniciadoEn = null
   } = datos
+
+  const [tickAhora, setTickAhora] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (puerta !== 'cerrando' || !cerrandoIniciadoEn) return undefined
+    const intervalo = setInterval(() => setTickAhora(Date.now()), 200)
+    return () => clearInterval(intervalo)
+  }, [puerta, cerrandoIniciadoEn])
+
+  const segundosRestantes = puerta === 'cerrando' && cerrandoIniciadoEn
+    ? Math.max(0, Math.ceil((cerrandoIniciadoEn + CIERRE_DURACION_MS - tickAhora) / 1000))
+    : null
+
+  const progresoCierre = puerta === 'cerrando' && cerrandoIniciadoEn
+    ? Math.min(100, Math.max(0, ((tickAhora - cerrandoIniciadoEn) / CIERRE_DURACION_MS) * 100))
+    : 0
 
   const getTemperaturaColor = () => {
     if (temperatura === null) return 'var(--text-muted)'
@@ -38,7 +61,7 @@ export function RoomCard({ cuartoId, datos }) {
     }
     if (estadoAlarma === 'preventiva') return {
       background: 'rgba(245, 158, 11, 0.1)',
-      border: '1px solid rgba(239, 68, 68, 0.35)',
+      border: '1px solid rgba(245, 158, 11, 0.35)',
       color: 'var(--color-preventiva)',
       dotColor: 'var(--color-preventiva)'
     }
@@ -60,7 +83,13 @@ export function RoomCard({ cuartoId, datos }) {
 
   const getPuertaColor = () => {
     if (puerta === 'abierta') return 'var(--color-preventiva)'
+    if (puerta === 'cerrando') return 'var(--color-critica)'
     return 'var(--color-normal)'
+  }
+
+  const formatPuertaLabel = (estado) => {
+    if (estado === 'cierre_cancelado') return 'Cierre cancelado'
+    return estado.charAt(0).toUpperCase() + estado.slice(1)
   }
 
   const getPresenciaColor = () => {
@@ -68,8 +97,10 @@ export function RoomCard({ cuartoId, datos }) {
     return '#334155'
   }
 
-  const showSilenciarBtn = estadoAlarma === 'critica' || estadoAlarma === 'preventiva'
+  const esSupervisor = userRol === 'supervisor'
+  const showSilenciarBtn = estadoAlarma === 'critica' && esSupervisor
   const showCerrarBtn = estadoAlarma === 'critica' && puerta === 'abierta'
+  const showForzarBtn = esSupervisor && typeof temperatura === 'number' && temperatura > 3
 
   return (
     <div className={`room-card room-card--${estadoAlarma}`}>
@@ -124,7 +155,7 @@ export function RoomCard({ cuartoId, datos }) {
               style={{ background: getPuertaColor() }}
             />
             <span style={{ color: getPuertaColor() }}>
-              {puerta.charAt(0).toUpperCase() + puerta.slice(1)}
+              {formatPuertaLabel(puerta)}
             </span>
           </div>
         </div>
@@ -142,14 +173,61 @@ export function RoomCard({ cuartoId, datos }) {
         </div>
       </div>
 
+      {puerta === 'cerrando' && segundosRestantes !== null && (
+        <div className="room-card__cierre" role="status" aria-live="polite">
+          <div className="room-card__cierre-header">
+            <span className="room-card__cierre-label">CIERRE AUTOMATICO</span>
+            <span className="room-card__cierre-segundos">{segundosRestantes}s</span>
+          </div>
+          <div className="room-card__cierre-bar-bg">
+            <div
+              className="room-card__cierre-bar-fill"
+              style={{ width: `${progresoCierre}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="room-card__sensor">
+        <span className="room-card__sensor-label">CORTINA</span>
+        <div className="room-card__sensor-value">
+          <span
+            className="room-card__sensor-dot"
+            style={{ background: cortina === 'activa' ? 'var(--color-preventiva)' : '#334155' }}
+          />
+          <span style={{ color: cortina === 'activa' ? 'var(--color-preventiva)' : 'var(--text-muted)' }}>
+            {cortina === 'activa' ? 'Activa' : 'Inactiva'}
+          </span>
+        </div>
+      </div>
+
       {/* Refrigeración */}
-      <div className="room-card__refrig">
-        <span className="room-card__sensor-label">REFRIGERACIÓN</span>
+      <div className={`room-card__refrig${motivoRefrigeracion !== 'NORMAL' ? ' room-card__refrig--activo' : ''}`}>
+        <div className="room-card__refrig-header">
+          <span className="room-card__sensor-label">REFRIGERACIÓN</span>
+          {motivoRefrigeracion === 'PUERTA_ABIERTA' && (
+            <span className="room-card__refrig-badge room-card__refrig-badge--puerta">
+              PUERTA ABIERTA
+            </span>
+          )}
+          {motivoRefrigeracion === 'FORZADO_MANUAL' && (
+            <span className="room-card__refrig-badge room-card__refrig-badge--forzado">
+              FORZADO
+            </span>
+          )}
+        </div>
         <div className="room-card__refrig-bar-wrap">
           <div className="room-card__temp-bar-bg" />
           <div
             className="room-card__temp-bar-fill"
-            style={{ width: '100%', background: 'var(--text-cyan)' }}
+            style={{
+              width: `${Math.min(Math.max(refrigeracion, 0), 100)}%`,
+              background: motivoRefrigeracion === 'PUERTA_ABIERTA'
+                ? 'var(--color-critica)'
+                : motivoRefrigeracion === 'FORZADO_MANUAL'
+                  ? 'var(--color-preventiva)'
+                  : 'var(--text-cyan)'
+            }}
           />
         </div>
         <span className="room-card__refrig-value">{refrigeracion}%</span>
@@ -158,21 +236,54 @@ export function RoomCard({ cuartoId, datos }) {
       {/* Botones de acción */}
       <div className="room-card__actions">
         {showCerrarBtn ? (
-          <button className="room-card__btn room-card__btn--cerrar">
+          <button
+            className="room-card__btn room-card__btn--cerrar"
+            onClick={() => onCerrarPuerta?.(cuartoId)}
+          >
             Cerrar Puerta
           </button>
         ) : (
           <button className="room-card__btn room-card__btn--abrir">
-            Abrir puerta
+            Abrir puerta  
           </button>
         )}
         {showSilenciarBtn && (
-          <button className="room-card__btn room-card__btn--silenciar">
+          <button
+            className="room-card__btn room-card__btn--silenciar"
+            onClick={() => onSilenciar?.(cuartoId)}
+          >
             Silenciar<br />Alarma
+          </button>
+        )}
+        {showForzarBtn && (
+          <button
+            className="room-card__btn room-card__btn--forzar"
+            onClick={() => onForzarRefrigeracion?.(cuartoId)}
+          >
+            Forzar<br />Refrigeración
           </button>
         )}
       </div>
 
     </div>
   )
+}
+
+RoomCard.propTypes = {
+  cuartoId: PropTypes.number.isRequired,
+  datos: PropTypes.shape({
+    temperatura: PropTypes.number,
+    estadoAlarma: PropTypes.string,
+    presencia: PropTypes.bool,
+    puerta: PropTypes.string,
+    cortina: PropTypes.string,
+    refrigeracion: PropTypes.number,
+    motivoRefrigeracion: PropTypes.oneOf(['NORMAL', 'PUERTA_ABIERTA', 'FORZADO_MANUAL']),
+    sinSenal: PropTypes.bool,
+    cerrandoIniciadoEn: PropTypes.number
+  }).isRequired,
+  userRol: PropTypes.oneOf(['operador', 'supervisor']),
+  onSilenciar: PropTypes.func,
+  onCerrarPuerta: PropTypes.func,
+  onForzarRefrigeracion: PropTypes.func
 }

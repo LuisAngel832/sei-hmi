@@ -19,11 +19,36 @@
 
 .room-card--preventiva {
   border-color: rgba(245, 158, 11, 0.3);
+  animation: pulso-preventivo 2.4s ease-in-out infinite;
 }
 
 @keyframes pulso-critico {
-  0%, 100% { border-color: rgba(239, 68, 68, 0.3); }
-  50%       { border-color: rgba(239, 68, 68, 0.7); }
+  0%, 100% {
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 0.75);
+    box-shadow: 0 0 18px 0 rgba(239, 68, 68, 0.35);
+  }
+}
+
+@keyframes pulso-preventivo {
+  0%, 100% {
+    border-color: rgba(245, 158, 11, 0.3);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+  50% {
+    border-color: rgba(245, 158, 11, 0.6);
+    box-shadow: 0 0 12px 0 rgba(245, 158, 11, 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-card--critica,
+  .room-card--preventiva {
+    animation: none;
+  }
 }
 
 /* Header */
@@ -164,6 +189,43 @@
   align-self: flex-end;
 }
 
+.room-card__refrig--activo .room-card__refrig-value {
+  color: var(--color-critica);
+}
+
+.room-card__refrig-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-card__refrig-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.room-card__refrig-badge--puerta {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: var(--color-critica);
+}
+
+.room-card__refrig-badge--forzado {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: var(--color-preventiva);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-card__refrig-badge {
+    animation: none;
+  }
+}
+
 /* Botones */
 .room-card__actions {
   display: flex;
@@ -200,4 +262,65 @@
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(239, 68, 68, 0.15);
   color: var(--color-critica);
+}
+
+.room-card__btn--forzar {
+  background: rgba(34, 211, 238, 0.12);
+  border-color: rgba(34, 211, 238, 0.35);
+  color: var(--text-cyan);
+}
+
+.room-card__btn--forzar:hover {
+  background: rgba(34, 211, 238, 0.2);
+}
+
+/* Countdown de cierre automatico (HU-07) */
+.room-card__cierre {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.room-card__cierre-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.room-card__cierre-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--color-critica);
+}
+
+.room-card__cierre-segundos {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-critica);
+}
+
+.room-card__cierre-bar-bg {
+  height: 4px;
+  background: rgba(239, 68, 68, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.room-card__cierre-bar-fill {
+  height: 100%;
+  background: var(--color-critica);
+  transition: width 0.18s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-card__cierre-bar-fill {
+    transition: none;
+  }
 }
