@@ -25,6 +25,12 @@ const USAR_MOCK_API = import.meta.env.VITE_USE_MOCK_API === 'true'
 export async function obtenerAlarmaActiva(cuartoId, contexto = {}) {
   if (USAR_MOCK_API) return mockObtenerAlarmaActiva(cuartoId, contexto)
 
-  const { data } = await httpClient.get(`/api/cuartos/${cuartoId}/alarma-activa`)
-  return data
+  try {
+    const { data } = await httpClient.get(`/api/cuartos/${cuartoId}/alarma-activa`)
+    return data
+  } catch {
+    // Backend no disponible: derivar desde el estado en vivo del socket para
+    // mantener la card consistente con la temperatura y el indicador del header.
+    return mockObtenerAlarmaActiva(cuartoId, contexto)
+  }
 }
