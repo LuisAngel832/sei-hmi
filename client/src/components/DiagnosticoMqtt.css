@@ -1,0 +1,31 @@
+.diag-mqtt {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.diag-mqtt__fila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.diag-mqtt__label {
+  color: var(--text-secondary);
+}
+
+.diag-mqtt__valor {
+  font-weight: 500;
+}
+
+.diag-mqtt__valor--cyan       { color: var(--text-cyan); }
+.diag-mqtt__valor--normal     { color: var(--color-normal); }
+.diag-mqtt__valor--preventiva { color: var(--color-preventiva); }
+.diag-mqtt__valor--critica    { color: var(--color-critica); }

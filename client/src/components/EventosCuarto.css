@@ -1,0 +1,62 @@
+.eventos-cuarto {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eventos-cuarto__titulo {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.eventos-cuarto__lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.eventos-cuarto__item {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.eventos-cuarto__hora {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.eventos-cuarto__desc {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.eventos-cuarto__desc--critica   { color: var(--color-critica); }
+.eventos-cuarto__desc--preventiva{ color: var(--color-preventiva); }
+.eventos-cuarto__desc--normal    { color: var(--color-normal); }
+.eventos-cuarto__desc--cyan      { color: var(--text-cyan); }
+
+.eventos-cuarto__vacio,
+.eventos-cuarto__error {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.eventos-cuarto__error {
+  color: var(--color-critica);
+}
