@@ -1,16 +1,31 @@
+// Umbrales operativos de alarma (alineados con la UI: 4.0 °C es 'critica').
+//   temperatura  <  3.0  -> normal
+//   3.0 <= t      <  4.0 -> preventiva
+//   temperatura >= 4.0   -> critica
+function derivarEstadoAlarma(temperatura) {
+  if (typeof temperatura !== 'number' || Number.isNaN(temperatura)) return null
+  if (temperatura < 3.0) return 'normal'
+  if (temperatura < 4.0) return 'preventiva'
+  return 'critica'
+}
+
 function buildSnapshotPayload(data) {
   const cuartos = Array.isArray(data?.cuartos) ? data.cuartos : []
   const normalizados = cuartos
     .filter((c) => Number.isInteger(c?.id) && c.id >= 1 && c.id <= 5)
-    .map((c) => ({
-      cuartoId: c.id,
-      temperatura: typeof c.temperatura === 'number' ? c.temperatura : null,
-      estadoAlarma: c.alarma ?? 'normal',
-      presencia: Boolean(c.presencia),
-      puerta: c.puerta ?? 'cerrada',
-      cortina: c.cortina ?? 'inactiva',
-      timestamp: c.timestamp ?? data?.timestamp ?? null
-    }))
+    .map((c) => {
+      const temperatura = typeof c.temperatura === 'number' ? c.temperatura : null
+      const derivado = derivarEstadoAlarma(temperatura)
+      return {
+        cuartoId: c.id,
+        temperatura,
+        estadoAlarma: derivado ?? c.alarma ?? 'normal',
+        presencia: Boolean(c.presencia),
+        puerta: c.puerta ?? 'cerrada',
+        cortina: c.cortina ?? 'inactiva',
+        timestamp: c.timestamp ?? data?.timestamp ?? null
+      }
+    })
 
   if (normalizados.length === 0) return null
 
@@ -47,10 +62,14 @@ export function handleMessage(topic, data, io) {
   switch (categoria) {
     case 'temperatura':
     {
+      // El estado_alarma del simulador usa <=4.0 -> preventiva. La autoridad
+      // operativa es la temperatura observada: derivamos aqui con el umbral
+      // 4.0 -> critica para que la HMI escale al cruzar el umbral.
+      const derivado = derivarEstadoAlarma(data.temperatura)
       const payload = {
         cuartoId,
         temperatura: data.temperatura,
-        estadoAlarma: data.estado_alarma,
+        estadoAlarma: derivado ?? data.estado_alarma,
         timestamp: data.timestamp
       }
       io.emit('temperatura', payload)
