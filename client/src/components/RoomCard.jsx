@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import './RoomCard.css'
 
 const CIERRE_DURACION_MS = 5000
 
 export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta, onForzarRefrigeracion }) {
+  const navigate = useNavigate()
   const {
     temperatura,
     estadoAlarma = 'normal',
@@ -17,6 +19,18 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
   } = datos
 
   const [tickAhora, setTickAhora] = useState(() => Date.now())
+
+  const irADetalle = () => navigate(`/cuarto/${cuartoId}`)
+  const handleKeyDownCard = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      irADetalle()
+    }
+  }
+  const stopFromCard = (handler) => (e) => {
+    e.stopPropagation()
+    handler?.(cuartoId)
+  }
 
   useEffect(() => {
     if (puerta !== 'cerrando' || !cerrandoIniciadoEn) return undefined
@@ -103,7 +117,14 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
   const showForzarBtn = esSupervisor && typeof temperatura === 'number' && temperatura > 3
 
   return (
-    <div className={`room-card room-card--${estadoAlarma}`}>
+    <div
+      className={`room-card room-card--${estadoAlarma} room-card--clickable`}
+      role="button"
+      tabIndex={0}
+      onClick={irADetalle}
+      onKeyDown={handleKeyDownCard}
+      aria-label={`Ver detalle del Cuarto ${cuartoId}`}
+    >
 
       {/* Header */}
       <div className="room-card__header">
@@ -235,22 +256,18 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
 
       {/* Botones de acción */}
       <div className="room-card__actions">
-        {showCerrarBtn ? (
+        {showCerrarBtn && (
           <button
             className="room-card__btn room-card__btn--cerrar"
-            onClick={() => onCerrarPuerta?.(cuartoId)}
+            onClick={stopFromCard(onCerrarPuerta)}
           >
             Cerrar Puerta
-          </button>
-        ) : (
-          <button className="room-card__btn room-card__btn--abrir">
-            Abrir puerta  
           </button>
         )}
         {showSilenciarBtn && (
           <button
             className="room-card__btn room-card__btn--silenciar"
-            onClick={() => onSilenciar?.(cuartoId)}
+            onClick={stopFromCard(onSilenciar)}
           >
             Silenciar<br />Alarma
           </button>
@@ -258,7 +275,7 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
         {showForzarBtn && (
           <button
             className="room-card__btn room-card__btn--forzar"
-            onClick={() => onForzarRefrigeracion?.(cuartoId)}
+            onClick={stopFromCard(onForzarRefrigeracion)}
           >
             Forzar<br />Refrigeración
           </button>
