@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { Home } from './pages/Home'
 import { Login } from './pages/Login'
 import { HistorialPanel } from './pages/HistorialPanel'
+import { CuartoDetalle } from './pages/CuartoDetalle'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import './App.css'
 
@@ -14,6 +15,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Home />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/cuarto/:id"
+        element={
+          <ProtectedRoute>
+            <CuartoDetalle />
           </ProtectedRoute>
         }
       />

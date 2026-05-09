@@ -5,6 +5,21 @@ const STORAGE_KEY = 'sei.auth.token'
 
 const AuthContext = createContext(null)
 
+// --- Bypass de autenticacion para desarrollo local ---
+const DISABLE_AUTH = import.meta.env.VITE_DISABLE_AUTH === 'true'
+
+if (DISABLE_AUTH) {
+  // Inyecta un JWT falso para que leerClaimsDelToken() en api/intervenciones funcione
+  const b64 = (obj) => btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+  const mockJwt = `${b64({ alg: 'none' })}.${b64({ operador_id: 1, nombre: 'Dev Local', rol: 'operador', exp: 9999999999 })}.mock`
+  try { sessionStorage.setItem(STORAGE_KEY, mockJwt) } catch { /* ignore */ }
+}
+
+const MOCK_USER = DISABLE_AUTH
+  ? { operadorId: 1, nombre: 'Dev Local', rol: 'operador', expiresAt: Date.now() + 86400000 }
+  : null
+// --- Fin bypass ---
+
 function decodeJwtPayload(token) {
   if (typeof token !== 'string' || token.split('.').length !== 3) return null
   try {
@@ -46,8 +61,8 @@ function readSessionToken() {
 }
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => readSessionToken())
-  const [user, setUser] = useState(() => buildUserFromClaims(decodeJwtPayload(readSessionToken())))
+  const [token, setToken] = useState(() => MOCK_USER ? 'mock' : readSessionToken())
+  const [user, setUser] = useState(() => MOCK_USER ?? buildUserFromClaims(decodeJwtPayload(readSessionToken())))
 
   const logout = useCallback(() => {
     try { sessionStorage.removeItem(STORAGE_KEY) } catch { /* ignore quota errors */ }
@@ -69,7 +84,7 @@ export function AuthProvider({ children }) {
   }, [logout])
 
   useEffect(() => {
-    if (!user?.expiresAt) return undefined
+    if (DISABLE_AUTH || !user?.expiresAt) return undefined
     const msUntilExpiry = user.expiresAt - Date.now()
     if (msUntilExpiry <= 0) {
       logout()

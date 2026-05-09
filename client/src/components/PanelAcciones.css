@@ -1,0 +1,104 @@
+.panel-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+
+.panel-acciones--readonly {
+  flex-direction: row;
+  gap: 14px;
+  align-items: flex-start;
+  border-color: rgba(99, 179, 237, 0.18);
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.04) 0%, var(--bg-card) 100%);
+}
+
+.panel-acciones--readonly strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-cyan);
+  font-size: 13px;
+}
+
+.panel-acciones--readonly p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.panel-acciones--readonly em {
+  color: var(--text-cyan);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.panel-acciones__readonly-icono {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--text-cyan);
+  color: var(--text-cyan);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.panel-acciones__titulo--oculto {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+
+.panel-acciones__btn {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.05s ease;
+  background: transparent;
+}
+
+.panel-acciones__btn:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.panel-acciones__btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.panel-acciones__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.panel-acciones__btn--forzar {
+  border-color: rgba(34, 211, 238, 0.4);
+  background: rgba(34, 211, 238, 0.1);
+  color: var(--text-cyan);
+}
+
+.panel-acciones__btn--cierre {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--color-preventiva);
+}
+
+.panel-acciones__btn--silenciar {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-critica);
+}

@@ -3,6 +3,62 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/) y
 versionado [SemVer](https://semver.org/lang/es/).
 
+## [0.5.0] - 2026-05-05 - HU-14 Detalle de cuarto
+
+Pantalla `/cuarto/:id` que centraliza la operacion de un cuarto:
+temperatura actual + grafico historico, sensores, actuadores, alarma
+activa, panel de acciones (gateado por rol) y eventos del cuarto.
+
+### Added
+- Ruta protegida `/cuarto/:id` (1..5) en `App.jsx`. Acceso por click sobre
+  cualquier `RoomCard` del panel principal (con soporte teclado: Enter/Espacio).
+- Pagina `pages/CuartoDetalle.jsx` con layout 2 columnas (hero + paneles
+  izquierda, alarma + acciones + eventos derecha).
+- Componente `GraficoTemperatura` con **recharts**: AreaChart con lineas
+  punteadas en 3°C (preventivo) y 4°C (critico), selector de rango 2H/24H/7D.
+- Componente `PanelSensores` (sensor temp, PIR, reed switch puerta,
+  estado señal, ultima lectura con tick segundo a segundo).
+- Componente `PanelActuadores` (cortina, puerta, refrigeracion, alarma
+  visual, alarma sonora derivada de `estadoAlarma==='critica'`).
+- Componente `AlarmaActivaCard` con detalles: inicio, temp pico, umbral,
+  presencia, ID en BD. Badge "Activa hace Xm Ys".
+- Componente `PanelAcciones` con botones **Forzar refrigeracion**,
+  **Forzar cierre** y **Silenciar alarma** habilitados segun contexto:
+  - Forzar refri: temperatura > 3°C
+  - Forzar cierre: puerta === 'abierta'
+  - Silenciar: estadoAlarma === 'critica'
+- Para rol `operador` se reemplaza el panel por un banner "Solo lectura".
+- Componente `EventosCuarto` que combina eventos del socket (filtrados
+  por cuarto) con intervenciones manuales del backend (api/intervenciones).
+- Componente `DiagnosticoMqtt` (solo supervisor) con topico, ultima
+  publicacion, estado bridge y limites preventivo/critico.
+- API `obtenerAlarmaActiva(cuartoId, contexto)` con mock derivado del
+  estado en vivo del cuarto.
+- `client/docs/tests/hu-14.md` con CP-14-A a CP-14-F.
+
+### Changed
+- `RoomCard` ahora navega a `/cuarto/:id` al click; los botones internos
+  detienen la propagacion para no disparar la navegacion. Se elimino el
+  boton "Abrir puerta" suelto que existia siempre.
+- `RoomCard.css` añade hover con elevacion sutil y outline en focus.
+
+### Fixed
+- Bridge: derivar `estadoAlarma` desde la temperatura observada con umbral
+  `>= 4.0 → critica` (alineado con la UI). El simulador clasifica
+  `<= 4.0 → preventiva`, asi que al llegar a 4.0 °C exacto el HMI no
+  escalaba; ademas mensajes `alarma` retained de sesiones previas podian
+  fijar el estado. Aplicado en `topicHandler.js` (`temperatura` y
+  `buildSnapshotPayload`) sin tocar el handler `alarma` para no contradecir
+  al backend cuando esta presente.
+- `AlarmaActivaCard` quedaba en "Sin alarmas activas" pese a `estadoAlarma`
+  preventiva/critica porque el endpoint `/api/cuartos/{n}/alarma-activa`
+  del backend no responde y el `.catch` dejaba `alarma=null`. Ahora el
+  cliente cae al mock derivado del estado en vivo cuando la llamada real
+  falla, manteniendo la card consistente con la temperatura y el header.
+
+### Dependencies
+- `recharts ^3.x` añadido a `client/package.json`.
+
 ## [0.4.0] - 2026-04-29 - Sprint 4
 
 Sprint orientado al panel de auditoria, historial de temperaturas con

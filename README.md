@@ -163,6 +163,32 @@ Topicos publicados por el HMI (comandos):
 
 Ver el contrato completo en `10_E7_Contrato_MQTT.docx`.
 
+## Detalle de cuarto (HU-14)
+
+La ruta `/cuarto/:id` (1..5) muestra la operacion completa de un cuarto en una sola
+pantalla. Se accede al hacer click sobre cualquier tarjeta del panel principal
+(o con `Enter` / `Espacio` desde teclado).
+
+Secciones:
+- **Hero** — temperatura actual con badge de estado, grafico de evolucion
+  con selector 2H / 24H / 7D y lineas punteadas en 3°C (preventivo) y
+  4°C (critico). Datos via `GET /api/cuartos/{id}/historial` (mockable).
+- **Sensores** — sensor de temperatura, PIR, reed switch de puerta,
+  estado señal y ultima lectura.
+- **Actuadores** — cortina, puerta automatica, refrigeracion (% y motivo),
+  alarma visual y alarma sonora.
+- **Alarma activa** — detalles de la alarma cuando hay una preventiva o
+  critica activa. Mock devuelve `null` cuando el cuarto esta en estado normal.
+- **Panel de acciones** — solo `supervisor`. Forzar refrigeracion (temp>3°C),
+  forzar cierre (puerta=abierta) y silenciar alarma (alarma critica). Cada
+  accion abre un modal de confirmacion. El operador ve un banner "Solo lectura".
+- **Eventos del cuarto** — combinacion de eventos del socket filtrados por
+  cuarto + intervenciones manuales (`/api/intervenciones?cuarto_id=N`).
+- **Diagnostico MQTT** — solo `supervisor`. Topico, ultima publicacion,
+  estado del bridge y limites de alarma.
+
+Checklist en `client/docs/tests/hu-14.md`.
+
 ## Panel de auditoria (Sprint 4)
 
 La ruta `/historial` (protegida, ambos roles) centraliza dos pestanas:
