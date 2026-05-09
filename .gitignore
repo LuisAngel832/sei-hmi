@@ -2,3 +2,9 @@ node_modules/
 dist/
 .env
 .DS_Store
+
+# Runtime artefactos del bridge / dev server
+*.log
+*.pid
+server/diag.json
+server/health.json
