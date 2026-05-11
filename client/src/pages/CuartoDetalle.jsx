@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../hooks/useSocket'
@@ -12,6 +12,8 @@ import { AlarmaActivaCard } from '../components/AlarmaActivaCard'
 import { EventosCuarto } from '../components/EventosCuarto'
 import { DiagnosticoMqtt } from '../components/DiagnosticoMqtt'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { ModalForzarRefrigeracion } from '../components/ModalForzarRefrigeracion'
+import { ModalSilenciarAlarma } from '../components/ModalSilenciarAlarma'
 import './CuartoDetalle.css'
 
 const ACCION_FORZAR = 'forzar_refrigeracion'
@@ -55,58 +57,33 @@ export function CuartoDetalle() {
   const abrirConfirmacion = (tipo) => setAccionPendiente(tipo)
   const cerrarConfirmacion = () => setAccionPendiente(null)
 
-  const confirmarAccion = () => {
-    if (accionPendiente === ACCION_FORZAR) forzarRefrigeracion?.(cuartoId)
-    if (accionPendiente === ACCION_CIERRE) cerrarPuerta?.(cuartoId)
-    if (accionPendiente === ACCION_SILENCIAR) silenciarAlarma?.(cuartoId)
+  const confirmarCierre = () => {
+    cerrarPuerta?.(cuartoId)
     setAccionPendiente(null)
   }
 
-  const dialogContenido = useMemo(() => {
-    if (accionPendiente === ACCION_FORZAR) {
-      return {
-        titulo: `Forzar refrigeracion — Cuarto ${cuartoId}`,
-        mensaje: (
-          <>
-            Vas a publicar un comando <strong>forzar_encendido</strong> al 100% en
-            el Cuarto {cuartoId}. La accion se registrara en intervenciones_manuales
-            con tu rol de supervisor.
-          </>
-        ),
-        textoConfirmar: 'Forzar al 100%',
-        tono: 'primario'
-      }
+  const confirmarSilenciar = () => {
+    silenciarAlarma?.(cuartoId)
+    setAccionPendiente(null)
+  }
+
+  const confirmarForzar = ({ cuartoId: cuartoIdElegido, duracionMinutos, potenciaPct }) => {
+    forzarRefrigeracion?.(cuartoIdElegido ?? cuartoId, { duracionMinutos, potenciaPct })
+    setAccionPendiente(null)
+  }
+
+  const dialogCierre = accionPendiente === ACCION_CIERRE
+    ? {
+      titulo: `Forzar cierre de puerta — Cuarto ${cuartoId}`,
+      mensaje: (
+        <>
+          Vas a publicar un comando <strong>forzar_cierre</strong> en el Cuarto
+          {' '}{cuartoId}. Si hay presencia detectada, el cierre puede quedar
+          bloqueado por seguridad. Quedara registrada como intervencion manual.
+        </>
+      )
     }
-    if (accionPendiente === ACCION_CIERRE) {
-      return {
-        titulo: `Forzar cierre de puerta — Cuarto ${cuartoId}`,
-        mensaje: (
-          <>
-            Vas a publicar un comando <strong>forzar_cierre</strong> en el Cuarto
-            {' '}{cuartoId}. Si hay presencia detectada, el cierre puede quedar
-            bloqueado por seguridad. Quedara registrada como intervencion manual.
-          </>
-        ),
-        textoConfirmar: 'Forzar cierre',
-        tono: 'primario'
-      }
-    }
-    if (accionPendiente === ACCION_SILENCIAR) {
-      return {
-        titulo: `Silenciar alarma — Cuarto ${cuartoId}`,
-        mensaje: (
-          <>
-            Vas a silenciar la alarma critica del Cuarto {cuartoId}. La sirena y
-            la luz roja se apagaran, pero la condicion de temperatura sigue activa
-            hasta que baje del umbral.
-          </>
-        ),
-        textoConfirmar: 'Silenciar alarma',
-        tono: 'critico'
-      }
-    }
-    return null
-  }, [accionPendiente, cuartoId])
+    : null
 
   if (cuartoInvalido) {
     return (
@@ -180,14 +157,31 @@ export function CuartoDetalle() {
         </div>
       </main>
 
+      <ModalForzarRefrigeracion
+        open={accionPendiente === ACCION_FORZAR}
+        cuartos={cuartos}
+        cuartoIdInicial={cuartoId}
+        onConfirmar={confirmarForzar}
+        onCancelar={cerrarConfirmacion}
+      />
+
+      <ModalSilenciarAlarma
+        open={accionPendiente === ACCION_SILENCIAR}
+        cuartoId={cuartoId}
+        datos={datos}
+        alarma={alarma}
+        onConfirmar={confirmarSilenciar}
+        onCancelar={cerrarConfirmacion}
+      />
+
       <ConfirmDialog
-        open={accionPendiente !== null}
-        titulo={dialogContenido?.titulo ?? ''}
-        mensaje={dialogContenido?.mensaje ?? null}
-        textoConfirmar={dialogContenido?.textoConfirmar ?? 'Confirmar'}
+        open={accionPendiente === ACCION_CIERRE}
+        titulo={dialogCierre?.titulo ?? ''}
+        mensaje={dialogCierre?.mensaje ?? null}
+        textoConfirmar="Forzar cierre"
         textoCancelar="Cancelar"
-        tonoAccion={dialogContenido?.tono ?? 'primario'}
-        onConfirmar={confirmarAccion}
+        tonoAccion="primario"
+        onConfirmar={confirmarCierre}
         onCancelar={cerrarConfirmacion}
       />
     </div>
