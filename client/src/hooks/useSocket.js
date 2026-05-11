@@ -116,11 +116,16 @@ export function useSocket() {
     })
   }, [emitirComando])
 
-  const forzarRefrigeracion = useCallback((cuartoId, potenciaPct = 100) => {
+  const forzarRefrigeracion = useCallback((cuartoId, opciones = {}) => {
+    const { potenciaPct = 100, duracionMinutos = 10 } = typeof opciones === 'number'
+      ? { potenciaPct: opciones }
+      : opciones
     emitirComando('forzar_refrigeracion', {
       cuartoId,
       potenciaPct,
       potencia_pct: potenciaPct,
+      duracionMinutos,
+      duracion_minutos: duracionMinutos,
       timestamp: new Date().toISOString()
     })
   }, [emitirComando])

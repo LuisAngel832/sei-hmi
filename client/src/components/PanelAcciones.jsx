@@ -10,14 +10,14 @@ export function PanelAcciones({
   onForzarCierre,
   onSilenciar
 }) {
-  if (rol !== 'supervisor') {
+  if (rol !== 'operador') {
     return (
       <aside className="panel-acciones panel-acciones--readonly" role="note">
         <span className="panel-acciones__readonly-icono" aria-hidden>i</span>
         <div>
           <strong>Solo lectura</strong>
           <p>Las acciones manuales sobre el cuarto (forzar refrigeración, forzar cierre, silenciar
-            alarma) requieren rol <em>supervisor</em>.</p>
+            alarma) requieren rol <em>operador</em>.</p>
         </div>
       </aside>
     )

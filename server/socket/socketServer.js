@@ -227,8 +227,8 @@ export function initSocketServer(httpServer) {
         return
       }
 
-      if (payload.rol !== 'supervisor') {
-        console.warn(`[SOCKET] forzar_refrigeracion rechazado: rol declarado='${payload.rol}' no es supervisor (cuarto ${cuartoId})`)
+      if (payload.rol !== 'operador') {
+        console.warn(`[SOCKET] forzar_refrigeracion rechazado: rol declarado='${payload.rol}' no es operador (cuarto ${cuartoId})`)
         return
       }
 
@@ -237,6 +237,10 @@ export function initSocketServer(httpServer) {
       const potenciaSegura = Number.isFinite(potenciaPct)
         ? Math.min(Math.max(Math.round(potenciaPct), 0), 100)
         : 100
+      const duracionRaw = Number(payload.duracionMinutos ?? payload.duracion_minutos ?? 10)
+      const duracionMinutos = Number.isFinite(duracionRaw) && duracionRaw > 0
+        ? Math.min(Math.max(Math.round(duracionRaw), 1), 240)
+        : 10
       const timestamp = payload.timestamp || new Date().toISOString()
 
       try {
@@ -245,6 +249,7 @@ export function initSocketServer(httpServer) {
           timestamp,
           comando: 'forzar_encendido',
           potencia_pct: potenciaSegura,
+          duracion_minutos: duracionMinutos,
           operador_id: operadorId,
           rol: payload.rol,
           jwt_token: jwtToken
