@@ -53,7 +53,7 @@ export function Header({ conectado, alarmasActivas = 0 }) {
           >
             Panel
           </NavLink>
-          {user?.rol === 'supervisor' && (
+          {user && (
             <NavLink
               to="/historial"
               className={({ isActive }) => `header__nav-link${isActive ? ' header__nav-link--activo' : ''}`}

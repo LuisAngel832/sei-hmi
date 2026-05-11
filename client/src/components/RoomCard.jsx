@@ -111,10 +111,10 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
     return '#334155'
   }
 
-  const esSupervisor = userRol === 'supervisor'
-  const showSilenciarBtn = estadoAlarma === 'critica' && esSupervisor
+  const esOperador = userRol === 'operador'
+  const showSilenciarBtn = estadoAlarma === 'critica' && esOperador
   const showCerrarBtn = estadoAlarma === 'critica' && puerta === 'abierta'
-  const showForzarBtn = esSupervisor && typeof temperatura === 'number' && temperatura > 3
+  const showForzarBtn = esOperador && typeof temperatura === 'number' && temperatura > 3
 
   return (
     <div

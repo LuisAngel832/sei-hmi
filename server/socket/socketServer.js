@@ -227,8 +227,8 @@ export function initSocketServer(httpServer) {
         return
       }
 
-      if (payload.rol !== 'supervisor') {
-        console.warn(`[SOCKET] forzar_refrigeracion rechazado: rol declarado='${payload.rol}' no es supervisor (cuarto ${cuartoId})`)
+      if (payload.rol !== 'operador') {
+        console.warn(`[SOCKET] forzar_refrigeracion rechazado: rol declarado='${payload.rol}' no es operador (cuarto ${cuartoId})`)
         return
       }
 
