@@ -101,6 +101,9 @@ export function handleMessage(topic, data, io) {
 
     case 'puerta':
     {
+      // El evento de estado llega en el topic raiz sei/cuartos/{n}/puerta.
+      // Cualquier subtopico (ej. puerta/cmd) lo ignoramos — el HMI no lo procesa.
+      if (parts[4]) return null
       // Estados validos del contrato E7 v2.0:
       //   'abierta' | 'cerrada' | 'cerrando' | 'cierre_cancelado'
       const ESTADOS_PUERTA = new Set(['abierta', 'cerrada', 'cerrando', 'cierre_cancelado'])
