@@ -141,7 +141,10 @@ export function handleMessage(topic, data, io) {
       const motivo = MOTIVOS_VALIDOS.has(data.motivo) ? data.motivo : 'NORMAL'
       const payload = {
         cuartoId,
-        potenciaPct: typeof data.potencia_pct === 'number' ? data.potencia_pct : 100,
+        // Tolerancia temporal: el back publica 'potencia' en lugar de 'potencia_pct' (lo arreglara despues).
+        potenciaPct: typeof data.potencia_pct === 'number'
+          ? data.potencia_pct
+          : (typeof data.potencia === 'number' ? data.potencia : 100),
         motivo,
         timestamp: data.timestamp
       }
