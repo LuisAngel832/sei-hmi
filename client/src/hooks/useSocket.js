@@ -38,7 +38,7 @@ export function useSocket() {
       id: 1,
       hora: formatHora(),
       cuartoId: null,
-      descripcion: 'Sistema iniciado — esperando datos',
+      descripcion: 'Sistema iniciado — esperando snapshot del backend (10–30 s)',
       tipo: 'info'
     }
   ])
