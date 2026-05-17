@@ -58,7 +58,7 @@ sei-hmi/
 
 ### Prerrequisitos
 - Node.js 20+
-- EMQX 5.x corriendo en `192.168.1.100:1883` (o ajusta `MQTT_HOST` / `MQTT_PORT`).
+- EMQX 5.x corriendo en `192.168.1.100:1883` (o ajusta `MQTT_BROKER_HOST` / `MQTT_PORT`).
 - Backend Spring Boot del proyecto `BackEnfriadores` arriba en `http://localhost:8080`.
 
 ### Variables de entorno del cliente
@@ -73,7 +73,7 @@ VITE_SOCKET_URL=http://localhost:3000
 `server/.env`:
 
 ```
-MQTT_HOST=192.168.1.100
+MQTT_BROKER_HOST=192.168.1.100
 MQTT_PORT=1883
 PORT=3000
 ```
