@@ -6,6 +6,7 @@ export function PanelAcciones({
   estadoAlarma,
   temperatura,
   puerta,
+  presencia = false,
   onForzarRefrigeracion,
   onForzarCierre,
   onSilenciar
@@ -24,7 +25,8 @@ export function PanelAcciones({
   }
 
   const puedeForzar = typeof temperatura === 'number' && temperatura > 3
-  const puedeCerrar = puerta === 'abierta'
+  // Bloqueado por seguridad: cerrar la puerta con personal dentro es un riesgo HACCP.
+  const puedeCerrar = puerta === 'abierta' && !presencia
   const puedeSilenciar = estadoAlarma === 'critica'
 
   return (
@@ -46,7 +48,13 @@ export function PanelAcciones({
         className="panel-acciones__btn panel-acciones__btn--cierre"
         onClick={onForzarCierre}
         disabled={!puedeCerrar}
-        title={puedeCerrar ? 'Forzar cierre de la puerta automatica' : 'La puerta ya esta cerrada'}
+        title={
+          puerta !== 'abierta'
+            ? 'La puerta ya esta cerrada'
+            : presencia
+              ? 'Bloqueado por seguridad: hay presencia detectada en el cuarto'
+              : 'Forzar cierre de la puerta automatica'
+        }
       >
         Forzar cierre
       </button>
@@ -69,6 +77,7 @@ PanelAcciones.propTypes = {
   estadoAlarma: PropTypes.string,
   temperatura: PropTypes.number,
   puerta: PropTypes.string,
+  presencia: PropTypes.bool,
   onForzarRefrigeracion: PropTypes.func.isRequired,
   onForzarCierre: PropTypes.func.isRequired,
   onSilenciar: PropTypes.func.isRequired

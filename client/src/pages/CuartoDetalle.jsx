@@ -138,6 +138,7 @@ export function CuartoDetalle() {
               estadoAlarma={datos.estadoAlarma}
               temperatura={datos.temperatura}
               puerta={datos.puerta}
+              presencia={datos.presencia}
               onForzarRefrigeracion={() => abrirConfirmacion(ACCION_FORZAR)}
               onForzarCierre={() => abrirConfirmacion(ACCION_CIERRE)}
               onSilenciar={() => abrirConfirmacion(ACCION_SILENCIAR)}
@@ -178,9 +179,12 @@ export function CuartoDetalle() {
         open={accionPendiente === ACCION_CIERRE}
         titulo={dialogCierre?.titulo ?? ''}
         mensaje={dialogCierre?.mensaje ?? null}
+        warning={datos?.presencia
+          ? 'Presencia detectada en el cuarto. Cerrar la puerta con personal dentro es un riesgo de seguridad — confirma sólo si verificaste que el cuarto esta despejado.'
+          : null}
         textoConfirmar="Forzar cierre"
         textoCancelar="Cancelar"
-        tonoAccion="primario"
+        tonoAccion={datos?.presencia ? 'critico' : 'primario'}
         onConfirmar={confirmarCierre}
         onCancelar={cerrarConfirmacion}
       />
