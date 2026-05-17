@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import './RoomCard.css'
 
 const CIERRE_DURACION_MS = 5000
 
 export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta, onForzarRefrigeracion }) {
+  const navigate = useNavigate()
   const {
     temperatura,
     estadoAlarma = 'normal',
@@ -12,10 +14,24 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
     puerta = 'cerrada',
     cortina = 'inactiva',
     refrigeracion = 100,
-    cerrandoIniciadoEn = null
+    motivoRefrigeracion = 'NORMAL',
+    cerrandoIniciadoEn = null,
+    sinSenal = false
   } = datos
 
   const [tickAhora, setTickAhora] = useState(() => Date.now())
+
+  const irADetalle = () => navigate(`/cuarto/${cuartoId}`)
+  const handleKeyDownCard = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      irADetalle()
+    }
+  }
+  const stopFromCard = (handler) => (e) => {
+    e.stopPropagation()
+    handler?.(cuartoId)
+  }
 
   useEffect(() => {
     if (puerta !== 'cerrando' || !cerrandoIniciadoEn) return undefined
@@ -96,13 +112,43 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
     return '#334155'
   }
 
-  const esSupervisor = userRol === 'supervisor'
-  const showSilenciarBtn = estadoAlarma === 'critica' && esSupervisor
-  const showCerrarBtn = estadoAlarma === 'critica' && puerta === 'abierta'
-  const showForzarBtn = esSupervisor && typeof temperatura === 'number' && temperatura > 3
+  const esOperador = userRol === 'operador'
+  // Sin senal: no permitir acciones sobre un cuarto desconectado.
+  const showSilenciarBtn = !sinSenal && estadoAlarma === 'critica' && esOperador
+  // Bloqueado por seguridad: no cerrar la puerta si hay presencia detectada.
+  const showCerrarBtn = !sinSenal && estadoAlarma === 'critica' && puerta === 'abierta' && !presencia
+  const showForzarBtn = !sinSenal && esOperador && typeof temperatura === 'number' && temperatura > 3
+
+  // Motivo efectivo para la badge/barra de refrigeracion.
+  // Le damos PRIORIDAD al estado actual de la puerta antes que al
+  // motivoRefrigeracion (que puede quedar cacheado si el back no
+  // republica con motivo=NORMAL al cerrar la puerta).
+  const refrigMotivoEfectivo = puerta === 'abierta'
+    ? 'PUERTA_ABIERTA'
+    : motivoRefrigeracion === 'FORZADO_MANUAL' ? 'FORZADO_MANUAL' : 'NORMAL'
+
+  const badgeStyleEfectivo = sinSenal
+    ? {
+        background: 'rgba(100, 116, 139, 0.18)',
+        border: '1px solid rgba(148, 163, 184, 0.45)',
+        color: '#94a3b8',
+        dotColor: '#94a3b8'
+      }
+    : badge
+  const badgeLabel = sinSenal
+    ? 'Sin señal'
+    : estadoAlarma.charAt(0).toUpperCase() + estadoAlarma.slice(1)
+  const dashSiSinSenal = (valor) => sinSenal ? '—' : valor
 
   return (
-    <div className={`room-card room-card--${estadoAlarma}`}>
+    <div
+      className={`room-card room-card--${estadoAlarma} room-card--clickable${sinSenal ? ' room-card--sin-senal' : ''}`}
+      role="button"
+      tabIndex={0}
+      onClick={irADetalle}
+      onKeyDown={handleKeyDownCard}
+      aria-label={`Ver detalle del Cuarto ${cuartoId}`}
+    >
 
       {/* Header */}
       <div className="room-card__header">
@@ -113,16 +159,16 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
         <div
           className="room-card__badge"
           style={{
-            background: badge.background,
-            border: badge.border,
-            color: badge.color
+            background: badgeStyleEfectivo.background,
+            border: badgeStyleEfectivo.border,
+            color: badgeStyleEfectivo.color
           }}
         >
           <span
             className="room-card__badge-dot"
-            style={{ background: badge.dotColor }}
+            style={{ background: badgeStyleEfectivo.dotColor }}
           />
-          {estadoAlarma.charAt(0).toUpperCase() + estadoAlarma.slice(1)}
+          {badgeLabel}
         </div>
       </div>
 
@@ -151,10 +197,10 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
           <div className="room-card__sensor-value">
             <span
               className="room-card__sensor-dot"
-              style={{ background: getPuertaColor() }}
+              style={{ background: sinSenal ? '#334155' : getPuertaColor() }}
             />
-            <span style={{ color: getPuertaColor() }}>
-              {formatPuertaLabel(puerta)}
+            <span style={{ color: sinSenal ? 'var(--text-muted)' : getPuertaColor() }}>
+              {dashSiSinSenal(formatPuertaLabel(puerta))}
             </span>
           </div>
         </div>
@@ -163,10 +209,10 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
           <div className="room-card__sensor-value">
             <span
               className="room-card__sensor-dot"
-              style={{ background: getPresenciaColor() }}
+              style={{ background: sinSenal ? '#334155' : getPresenciaColor() }}
             />
-            <span style={{ color: getPresenciaColor() }}>
-              {presencia ? 'Detectada' : 'Sin presencia'}
+            <span style={{ color: sinSenal ? 'var(--text-muted)' : getPresenciaColor() }}>
+              {dashSiSinSenal(presencia ? 'Detectada' : 'Sin presencia')}
             </span>
           </div>
         </div>
@@ -192,45 +238,58 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
         <div className="room-card__sensor-value">
           <span
             className="room-card__sensor-dot"
-            style={{ background: cortina === 'activa' ? 'var(--color-preventiva)' : '#334155' }}
+            style={{ background: sinSenal ? '#334155' : (cortina === 'activa' ? 'var(--color-preventiva)' : '#334155') }}
           />
-          <span style={{ color: cortina === 'activa' ? 'var(--color-preventiva)' : 'var(--text-muted)' }}>
-            {cortina === 'activa' ? 'Activa' : 'Inactiva'}
+          <span style={{ color: sinSenal ? 'var(--text-muted)' : (cortina === 'activa' ? 'var(--color-preventiva)' : 'var(--text-muted)') }}>
+            {dashSiSinSenal(cortina === 'activa' ? 'Activa' : 'Inactiva')}
           </span>
         </div>
       </div>
 
       {/* Refrigeración */}
-      <div className="room-card__refrig">
-        <span className="room-card__sensor-label">REFRIGERACIÓN</span>
+      <div className={`room-card__refrig${!sinSenal && refrigMotivoEfectivo !== 'NORMAL' ? ' room-card__refrig--activo' : ''}`}>
+        <div className="room-card__refrig-header">
+          <span className="room-card__sensor-label">REFRIGERACIÓN</span>
+          {/* REQ-01: badge "PUERTA ABIERTA" eliminado — la información ya
+              está en el sensor de PUERTA arriba. Mantenemos "FORZADO" porque
+              indica una intervención manual sin otra señal en la tarjeta. */}
+          {!sinSenal && refrigMotivoEfectivo === 'FORZADO_MANUAL' && (
+            <span className="room-card__refrig-badge room-card__refrig-badge--forzado">
+              FORZADO
+            </span>
+          )}
+        </div>
         <div className="room-card__refrig-bar-wrap">
           <div className="room-card__temp-bar-bg" />
           <div
             className="room-card__temp-bar-fill"
-            style={{ width: `${Math.min(Math.max(refrigeracion, 0), 100)}%`, background: 'var(--text-cyan)' }}
+            style={{
+              width: sinSenal ? '0%' : `${Math.min(Math.max(refrigeracion, 0), 100)}%`,
+              // Barra siempre azul (REQ-01). El motivo se comunica en el badge
+              // de arriba ("PUERTA ABIERTA" / "FORZADO"), no en el color.
+              background: sinSenal ? '#334155' : 'var(--text-cyan)'
+            }}
           />
         </div>
-        <span className="room-card__refrig-value">{refrigeracion}%</span>
+        <span className="room-card__refrig-value" style={sinSenal ? { color: 'var(--text-muted)' } : undefined}>
+          {dashSiSinSenal(`${refrigeracion}%`)}
+        </span>
       </div>
 
       {/* Botones de acción */}
       <div className="room-card__actions">
-        {showCerrarBtn ? (
+        {showCerrarBtn && (
           <button
             className="room-card__btn room-card__btn--cerrar"
-            onClick={() => onCerrarPuerta?.(cuartoId)}
+            onClick={stopFromCard(onCerrarPuerta)}
           >
             Cerrar Puerta
-          </button>
-        ) : (
-          <button className="room-card__btn room-card__btn--abrir">
-            Abrir puerta  
           </button>
         )}
         {showSilenciarBtn && (
           <button
             className="room-card__btn room-card__btn--silenciar"
-            onClick={() => onSilenciar?.(cuartoId)}
+            onClick={stopFromCard(onSilenciar)}
           >
             Silenciar<br />Alarma
           </button>
@@ -238,7 +297,7 @@ export function RoomCard({ cuartoId, datos, userRol, onSilenciar, onCerrarPuerta
         {showForzarBtn && (
           <button
             className="room-card__btn room-card__btn--forzar"
-            onClick={() => onForzarRefrigeracion?.(cuartoId)}
+            onClick={stopFromCard(onForzarRefrigeracion)}
           >
             Forzar<br />Refrigeración
           </button>
@@ -258,6 +317,7 @@ RoomCard.propTypes = {
     puerta: PropTypes.string,
     cortina: PropTypes.string,
     refrigeracion: PropTypes.number,
+    motivoRefrigeracion: PropTypes.oneOf(['NORMAL', 'PUERTA_ABIERTA', 'FORZADO_MANUAL']),
     sinSenal: PropTypes.bool,
     cerrandoIniciadoEn: PropTypes.number
   }).isRequired,
