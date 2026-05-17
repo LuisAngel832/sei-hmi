@@ -9,6 +9,7 @@ export function ConfirmDialog({
   textoConfirmar = 'Confirmar',
   textoCancelar = 'Cancelar',
   tonoAccion = 'primario',
+  warning = null,
   onConfirmar,
   onCancelar
 }) {
@@ -47,6 +48,12 @@ export function ConfirmDialog({
         aria-labelledby="confirm-dialog-titulo"
       >
         <h2 id="confirm-dialog-titulo" className="confirm-dialog__titulo">{titulo}</h2>
+        {warning && (
+          <div className="confirm-dialog__warning" role="alert">
+            <span className="confirm-dialog__warning-icon" aria-hidden>⚠</span>
+            <span>{warning}</span>
+          </div>
+        )}
         <p className="confirm-dialog__mensaje">{mensaje}</p>
         <div className="confirm-dialog__acciones">
           <button
@@ -77,6 +84,7 @@ ConfirmDialog.propTypes = {
   textoConfirmar: PropTypes.string,
   textoCancelar: PropTypes.string,
   tonoAccion: PropTypes.oneOf(['primario', 'critico']),
+  warning: PropTypes.node,
   onConfirmar: PropTypes.func.isRequired,
   onCancelar: PropTypes.func.isRequired
 }

@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../hooks/useSocket'
 import { Header } from '../components/Header'
 import { RoomCard } from '../components/RoomCard'
-import { ConfirmDialog } from '../components/ConfirmDialog'
+import { ModalForzarRefrigeracion } from '../components/ModalForzarRefrigeracion'
 
 export function Home() {
   const { user } = useAuth()
@@ -26,16 +26,10 @@ export function Home() {
     setCuartoEnConfirmacion(null)
   }, [])
 
-  const confirmarForzar = useCallback(() => {
-    if (cuartoEnConfirmacion !== null) {
-      forzarRefrigeracion?.(cuartoEnConfirmacion)
-    }
+  const confirmarForzar = useCallback(({ cuartoId, duracionMinutos, potenciaPct }) => {
+    forzarRefrigeracion?.(cuartoId, { duracionMinutos, potenciaPct })
     setCuartoEnConfirmacion(null)
-  }, [cuartoEnConfirmacion, forzarRefrigeracion])
-
-  const tempCuartoSeleccionado = cuartoEnConfirmacion !== null
-    ? cuartos[cuartoEnConfirmacion]?.temperatura
-    : null
+  }, [forzarRefrigeracion])
 
   return (
     <div className="app">
@@ -56,23 +50,10 @@ export function Home() {
         </div>
       </main>
 
-      <ConfirmDialog
+      <ModalForzarRefrigeracion
         open={cuartoEnConfirmacion !== null}
-        titulo={`Forzar refrigeracion — Cuarto ${cuartoEnConfirmacion ?? ''}`}
-        mensaje={
-          <>
-            Vas a publicar un comando de <strong>forzar_encendido</strong> al
-            100% de potencia en el Cuarto {cuartoEnConfirmacion}.
-            {typeof tempCuartoSeleccionado === 'number' && (
-              <> La temperatura actual es <strong>{tempCuartoSeleccionado.toFixed(1)} C</strong>.</>
-            )}
-            <br />
-            La accion se registrara en intervenciones_manuales con tu rol de supervisor.
-          </>
-        }
-        textoConfirmar="Forzar al 100%"
-        textoCancelar="Cancelar"
-        tonoAccion="primario"
+        cuartos={cuartos}
+        cuartoIdInicial={cuartoEnConfirmacion}
         onConfirmar={confirmarForzar}
         onCancelar={cancelarForzar}
       />

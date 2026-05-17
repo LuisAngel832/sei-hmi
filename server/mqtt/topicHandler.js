@@ -101,6 +101,9 @@ export function handleMessage(topic, data, io) {
 
     case 'puerta':
     {
+      // El evento de estado llega en el topic raiz sei/cuartos/{n}/puerta.
+      // Cualquier subtopico (ej. puerta/cmd) lo ignoramos — el HMI no lo procesa.
+      if (parts[4]) return null
       // Estados validos del contrato E7 v2.0:
       //   'abierta' | 'cerrada' | 'cerrando' | 'cierre_cancelado'
       const ESTADOS_PUERTA = new Set(['abierta', 'cerrada', 'cerrando', 'cierre_cancelado'])
@@ -138,7 +141,10 @@ export function handleMessage(topic, data, io) {
       const motivo = MOTIVOS_VALIDOS.has(data.motivo) ? data.motivo : 'NORMAL'
       const payload = {
         cuartoId,
-        potenciaPct: typeof data.potencia_pct === 'number' ? data.potencia_pct : 100,
+        // Tolerancia temporal: el back publica 'potencia' en lugar de 'potencia_pct' (lo arreglara despues).
+        potenciaPct: typeof data.potencia_pct === 'number'
+          ? data.potencia_pct
+          : (typeof data.potencia === 'number' ? data.potencia : 100),
         motivo,
         timestamp: data.timestamp
       }

@@ -213,9 +213,9 @@
   align-self: flex-end;
 }
 
-.room-card__refrig--activo .room-card__refrig-value {
-  color: var(--color-critica);
-}
+/* REQ-01: el texto del % siempre es azul, sin importar el motivo. Lo
+ * que se muestra en otra parte de la tarjeta cubre la información de
+ * "activo" — la barra y el texto deben ser visualmente neutrales. */
 
 .room-card__refrig-header {
   display: flex;
@@ -347,4 +347,20 @@
   .room-card__cierre-bar-fill {
     transition: none;
   }
+}
+/* Estado: sin senal — el cuarto dejo de publicar telemetria */
+.room-card--sin-senal {
+  opacity: 0.62;
+  filter: grayscale(0.35);
+  border-style: dashed;
+}
+
+.room-card--sin-senal:hover {
+  opacity: 0.78;
+}
+
+/* Reset del fondo coloreado por estado de alarma cuando sin senal */
+.room-card--sin-senal.room-card--critica,
+.room-card--sin-senal.room-card--preventiva {
+  background: var(--bg-card);
 }

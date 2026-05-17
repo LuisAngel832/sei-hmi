@@ -12,6 +12,15 @@ const TIPO_ACCION_LABEL = {
   cancelar_cierre:     'Cancelar cierre'
 }
 
+// Tipos que el back persiste en intervenciones_manuales pero que en realidad
+// son ajustes automáticos del sistema (no acciones del operador). Los ocultamos
+// aquí para que el log sólo muestre intervenciones humanas reales — el auditor
+// HACCP necesita distinguir lo manual de lo automático.
+const TIPOS_OCULTOS = new Set([
+  'ajuste_automatico_potencia',
+  'cancelar_refrigeracion_forzada'
+])
+
 function formatTimestamp(iso) {
   if (!iso) return '—'
   try {
@@ -38,7 +47,9 @@ export function LogIntervenciones({ userRol }) {
     try {
       const params = cuartoId > 0 ? { cuartoId } : {}
       const resultado = await obtenerIntervenciones(params)
-      setIntervenciones(resultado.intervenciones ?? [])
+      const todas = resultado.intervenciones ?? []
+      // Excluye automatismos del sistema (ver TIPOS_OCULTOS).
+      setIntervenciones(todas.filter(v => !TIPOS_OCULTOS.has(v.tipo_accion)))
       setBuscado(true)
     } catch (err) {
       setError(err?.response?.status === 401

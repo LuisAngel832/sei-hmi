@@ -1,0 +1,391 @@
+.forzar-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 20, 0.78);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+  animation: forzar-overlay-in 0.15s ease-out;
+}
+
+.forzar-modal__card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--text-cyan);
+  border-radius: var(--radius-lg);
+  padding: 22px 26px;
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(34, 211, 238, 0.15);
+  animation: forzar-card-in 0.18s ease-out;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.forzar-modal__cerrar {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background 0.15s ease;
+}
+
+.forzar-modal__cerrar:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.forzar-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 28px;
+}
+
+.forzar-modal__icono {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: rgba(34, 211, 238, 0.12);
+  color: var(--text-cyan);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.forzar-modal__titulo {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-cyan);
+  margin: 0;
+}
+
+.forzar-modal__subtitulo {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 2px 0 0 0;
+}
+
+.forzar-modal__seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.forzar-modal__label {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.forzar-modal__cuartos {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.forzar-modal__cuarto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.forzar-modal__cuarto:hover {
+  border-color: var(--text-cyan);
+}
+
+.forzar-modal__cuarto--seleccionado {
+  border-color: var(--text-cyan);
+  background: rgba(34, 211, 238, 0.08);
+  box-shadow: inset 0 0 0 1px var(--text-cyan);
+}
+
+.forzar-modal__cuarto--critica {
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+.forzar-modal__cuarto--preventiva {
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.forzar-modal__cuarto-id {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.forzar-modal__cuarto-temp {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.forzar-modal__cuarto-estado {
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-preventiva, #f59e0b);
+}
+
+.forzar-modal__cuarto--critica .forzar-modal__cuarto-estado {
+  color: var(--color-critica);
+}
+
+.forzar-modal__detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.forzar-modal__detalle-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.forzar-modal__detalle-header strong {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.forzar-modal__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  border: 1px solid;
+}
+
+.forzar-modal__badge--preventiva {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.55);
+  color: var(--color-preventiva, #f59e0b);
+}
+
+.forzar-modal__badge--critica {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: var(--color-critica);
+}
+
+.forzar-modal__detalle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.forzar-modal__detalle-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.forzar-modal__metrica-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.forzar-modal__metrica-valor {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.forzar-modal__metrica-valor--alerta {
+  color: var(--color-preventiva, #f59e0b);
+}
+
+.forzar-modal__duraciones {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.forzar-modal__chip {
+  padding: 9px 4px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.forzar-modal__chip:hover {
+  border-color: var(--text-cyan);
+}
+
+.forzar-modal__chip--activo {
+  background: rgba(34, 211, 238, 0.14);
+  border-color: var(--text-cyan);
+  color: var(--text-cyan);
+}
+
+.forzar-modal__slider-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.forzar-modal__slider-valor {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-cyan);
+}
+
+.forzar-modal__slider {
+  width: 100%;
+  accent-color: var(--text-cyan);
+  cursor: pointer;
+}
+
+.forzar-modal__warning {
+  display: flex;
+  gap: 12px;
+  padding: 11px 14px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  border-radius: var(--radius-md);
+}
+
+.forzar-modal__warning-icono {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--color-preventiva, #f59e0b);
+}
+
+.forzar-modal__warning p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.forzar-modal__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.forzar-modal__btn {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.forzar-modal__btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.forzar-modal__btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.forzar-modal__btn:focus-visible {
+  outline: 2px solid var(--text-cyan);
+  outline-offset: 2px;
+}
+
+.forzar-modal__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.forzar-modal__btn--cancelar {
+  background: transparent;
+  border-color: var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.forzar-modal__btn--primario {
+  background: var(--text-cyan);
+  border-color: var(--text-cyan);
+  color: var(--bg-app);
+}
+
+@keyframes forzar-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes forzar-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forzar-modal__overlay,
+  .forzar-modal__card {
+    animation: none;
+  }
+}
+
+@media (max-width: 540px) {
+  .forzar-modal__cuartos {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .forzar-modal__detalle-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

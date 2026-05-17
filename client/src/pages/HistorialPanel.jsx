@@ -4,6 +4,7 @@ import { TablaHistorial } from '../components/TablaHistorial'
 import { LogIntervenciones } from '../components/LogIntervenciones'
 import { obtenerHistorial, descargarCsvHistorial } from '../api/historial'
 import { useAuth } from '../context/AuthContext'
+import { useSocket } from '../hooks/useSocket'
 import './HistorialPanel.css'
 
 const CUARTOS = [1, 2, 3, 4, 5]
@@ -15,6 +16,7 @@ const RANGOS = [
 
 export function HistorialPanel() {
   const { user } = useAuth()
+  const { conectado, alarmasActivas } = useSocket()
   const [tabActiva, setTabActiva]   = useState('historial')
   const [cuartoId, setCuartoId]     = useState(1)
   const [rango, setRango]           = useState('24h')
@@ -56,7 +58,7 @@ export function HistorialPanel() {
 
   return (
     <div className="historial-page">
-      <Header />
+      <Header conectado={conectado} alarmasActivas={alarmasActivas} />
 
       <main className="historial-main">
         <div className="historial-card">

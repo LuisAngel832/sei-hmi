@@ -38,10 +38,27 @@ export async function obtenerIntervenciones({ cuartoId, desde, hasta } = {}) {
   }
 
   const params = {}
-  if (cuartoId) params.cuarto_id = cuartoId
+  if (cuartoId) params.cuartoId = cuartoId
   if (desde)    params.desde = desde
   if (hasta)    params.hasta = hasta
 
   const { data } = await httpClient.get('/api/intervenciones', { params })
-  return data
+
+  // El back devuelve un array plano con campos camelCase.
+  // Normalizamos a { intervenciones, total } con snake_case (que es lo que
+  // espera LogIntervenciones.jsx y consistente con el resto de la app).
+  const rawList = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.intervenciones) ? data.intervenciones : []
+  const intervenciones = rawList.map((v) => ({
+    id: v.id,
+    timestamp: v.timestamp,
+    cuarto_id: v.cuarto_id ?? v.cuartoId,
+    operador_id: v.operador_id ?? v.operadorId,
+    tipo_accion: v.tipo_accion ?? v.tipoAccion,
+    rol_en_ejecucion: v.rol_en_ejecucion ?? v.rolEnEjecucion,
+    descripcion: v.descripcion,
+    alarma_id: v.alarma_id ?? v.alarmaId ?? null
+  }))
+  return { intervenciones, total: intervenciones.length }
 }

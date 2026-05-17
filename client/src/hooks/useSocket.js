@@ -4,7 +4,9 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000'
-const TIMEOUT_MS = 65000
+// El estado sin_senal lo decide el bridge (eventos 'sin_senal' /
+// 'senal_recuperada'). El timeout client-side se elimino porque al recargar
+// la pagina el cliente recibia retained y reiniciaba el contador.
 const USAR_DATOS_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 const datosMock = {
@@ -38,11 +40,10 @@ export function useSocket() {
       id: 1,
       hora: formatHora(),
       cuartoId: null,
-      descripcion: 'Sistema iniciado — esperando datos',
+      descripcion: 'Sistema iniciado — esperando snapshot del backend (10–30 s)',
       tipo: 'info'
     }
   ])
-  const timeoutRefs = useRef({})
   const socketRef = useRef(null)
 
   const agregarEvento = useCallback((cuartoId, descripcion, tipo = 'info') => {
@@ -69,16 +70,6 @@ export function useSocket() {
     }
     return false
   }
-
-  const marcarSinSenal = useCallback((cuartoId) => {
-    setCuartos(prev => ({ ...prev, [cuartoId]: { ...prev[cuartoId], sinSenal: true } }))
-    agregarEvento(cuartoId, `Cuarto ${cuartoId} — sin señal`, 'critica')
-  }, [agregarEvento])
-
-  const reiniciarTimeout = useCallback((cuartoId) => {
-    if (timeoutRefs.current[cuartoId]) clearTimeout(timeoutRefs.current[cuartoId])
-    timeoutRefs.current[cuartoId] = setTimeout(() => marcarSinSenal(cuartoId), TIMEOUT_MS)
-  }, [marcarSinSenal])
 
   // Función para emitir comandos al backend vía socket
   const emitirComando = useCallback((evento, payload) => {
@@ -116,11 +107,16 @@ export function useSocket() {
     })
   }, [emitirComando])
 
-  const forzarRefrigeracion = useCallback((cuartoId, potenciaPct = 100) => {
+  const forzarRefrigeracion = useCallback((cuartoId, opciones = {}) => {
+    const { potenciaPct = 100, duracionMinutos = 10 } = typeof opciones === 'number'
+      ? { potenciaPct: opciones }
+      : opciones
     emitirComando('forzar_refrigeracion', {
       cuartoId,
       potenciaPct,
       potencia_pct: potenciaPct,
+      duracionMinutos,
+      duracion_minutos: duracionMinutos,
       timestamp: new Date().toISOString()
     })
   }, [emitirComando])
@@ -139,6 +135,15 @@ export function useSocket() {
     socket.on('disconnect', () => {
       setConectado(false)
       agregarEvento(null, 'Desconectado del servidor', 'critica')
+      // Sin socket no llegan eventos -> marcar los 5 cuartos como sin senal
+      // inmediatamente (no esperar a que el bridge lo detecte tras reconexion).
+      setCuartos(prev => {
+        const next = { ...prev }
+        for (const id of Object.keys(next)) {
+          next[id] = { ...next[id], sinSenal: true }
+        }
+        return next
+      })
     })
 
     socket.on('snapshot_inicial', ({ cuartos: snapshotCuartos }) => {
@@ -160,9 +165,6 @@ export function useSocket() {
         })
         return next
       })
-      snapshotCuartos.forEach((c) => {
-        if (esCuartoValido(c.cuartoId)) reiniciarTimeout(c.cuartoId)
-      })
       agregarEvento(null, `Snapshot inicial — ${snapshotCuartos.length} cuartos sincronizados`, 'info')
     })
 
@@ -178,7 +180,6 @@ export function useSocket() {
           sinSenal: false
         }
       }))
-      reiniciarTimeout(cuartoId)
     })
 
     socket.on('presencia', ({ cuartoId, presencia, timestamp }) => {
@@ -192,7 +193,6 @@ export function useSocket() {
           sinSenal: false
         }
       }))
-      reiniciarTimeout(cuartoId)
     })
 
     socket.on('alarma', ({ cuartoId, estado, temperaturaPico, timestamp }) => {
@@ -207,10 +207,19 @@ export function useSocket() {
           sinSenal: false
         }
       }))
-      reiniciarTimeout(cuartoId)
     })
 
     socket.on('puerta', ({ cuartoId, estado, origen, timestamp }) => {
+      // [DEBUG-PUERTA] Log temporal para verificar flujo socket->cliente.
+      // QUITAR cuando el bug de back (no publica estado=abierta) este resuelto.
+      console.log(
+        `%c[PUERTA] Cuarto ${cuartoId} → ${estado}`,
+        estado === 'abierta' ? 'background:#22c55e;color:#000;padding:2px 6px;font-weight:bold'
+        : estado === 'cerrando' ? 'background:#f59e0b;color:#000;padding:2px 6px;font-weight:bold'
+        : estado === 'cierre_cancelado' ? 'background:#60a5fa;color:#000;padding:2px 6px;font-weight:bold'
+        : 'background:#334155;color:#fff;padding:2px 6px',
+        { origen, timestamp, recibido: new Date().toISOString() }
+      )
       if (!esCuartoValido(cuartoId)) return
       setCuartos(prev => {
         const previo = prev[cuartoId]
@@ -242,8 +251,6 @@ export function useSocket() {
           duracion: 4000
         })
       }
-
-      reiniciarTimeout(cuartoId)
     })
 
     socket.on('cortina', ({ cuartoId, estado }) => {
@@ -267,14 +274,37 @@ export function useSocket() {
       }))
     })
 
-    Object.keys(estadoInicial).forEach(id => reiniciarTimeout(Number(id)))
+    // Sin senal autoritativo: lo decide el bridge segun el ultimo timestamp
+    // de temperatura recibida por MQTT.
+    socket.on('sin_senal', ({ cuartoId }) => {
+      if (!esCuartoValido(cuartoId)) return
+      setCuartos(prev => {
+        if (prev[cuartoId].sinSenal) return prev
+        return {
+          ...prev,
+          [cuartoId]: { ...prev[cuartoId], sinSenal: true }
+        }
+      })
+      agregarEvento(cuartoId, `Cuarto ${cuartoId} — sin señal`, 'critica')
+    })
+
+    socket.on('senal_recuperada', ({ cuartoId }) => {
+      if (!esCuartoValido(cuartoId)) return
+      setCuartos(prev => {
+        if (!prev[cuartoId].sinSenal) return prev
+        return {
+          ...prev,
+          [cuartoId]: { ...prev[cuartoId], sinSenal: false }
+        }
+      })
+      agregarEvento(cuartoId, `Cuarto ${cuartoId} — señal recuperada`, 'info')
+    })
 
     return () => {
       socket.disconnect()
       socketRef.current = null
-      Object.values(timeoutRefs.current).forEach(clearTimeout)
     }
-  }, [esCuartoValido, reiniciarTimeout, agregarEvento])
+  }, [esCuartoValido, agregarEvento])
 
   const alarmasActivas = Object.values(cuartos).filter(
     c => c.estadoAlarma === 'critica' || c.estadoAlarma === 'preventiva'
