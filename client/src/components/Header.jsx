@@ -61,6 +61,14 @@ export function Header({ conectado, alarmasActivas = 0 }) {
               Auditoria
             </NavLink>
           )}
+          {user?.rol === 'operador' && (
+            <NavLink
+              to="/aprobacion-usuarios"
+              className={({ isActive }) => `header__nav-link${isActive ? ' header__nav-link--activo' : ''}`}
+            >
+              Aprobar cuentas
+            </NavLink>
+          )}
         </nav>
       </div>
 

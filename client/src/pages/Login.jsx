@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { httpClient } from '../api/httpClient'
 import './Login.css'
@@ -93,6 +93,10 @@ export function Login() {
         >
           {loading ? 'Validando...' : 'Entrar'}
         </button>
+
+        <Link to="/registro" className="login__registro">
+          Crear cuenta
+        </Link>
       </form>
     </div>
   )
