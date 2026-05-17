@@ -165,6 +165,11 @@ export function initSocketServer(httpServer) {
         return
       }
 
+      if (payload.rol !== 'operador') {
+        console.warn(`[SOCKET] silenciar_alarma rechazado: rol declarado='${payload.rol}' no es operador (cuarto ${cuartoId})`)
+        return
+      }
+
       const operadorId = sanitizeOperadorId(payload.operadorId)
       const timestamp = payload.timestamp || new Date().toISOString()
 
@@ -174,6 +179,7 @@ export function initSocketServer(httpServer) {
           timestamp,
           comando: 'silenciar',
           operador_id: operadorId,
+          rol: payload.rol,
           jwt_token: jwtToken
         }, {
           qos: 1,
@@ -196,6 +202,11 @@ export function initSocketServer(httpServer) {
         return
       }
 
+      if (payload.rol !== 'operador') {
+        console.warn(`[SOCKET] forzar_cierre rechazado: rol declarado='${payload.rol}' no es operador (cuarto ${cuartoId})`)
+        return
+      }
+
       const operadorId = sanitizeOperadorId(payload.operadorId)
       const timestamp = payload.timestamp || new Date().toISOString()
 
@@ -205,6 +216,7 @@ export function initSocketServer(httpServer) {
           timestamp,
           comando: 'forzar_cierre',
           operador_id: operadorId,
+          rol: payload.rol,
           jwt_token: jwtToken
         }, {
           qos: 1,
