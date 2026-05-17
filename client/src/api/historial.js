@@ -33,7 +33,30 @@ export async function obtenerHistorial(cuartoId, rango) {
   const { data } = await httpClient.get(`/api/cuartos/${cuartoId}/historial`, {
     params: { desde, hasta, formato: 'json' }
   })
-  return data
+
+  // El backend puede devolver un array plano o un objeto envuelto.
+  // Normalizamos a { lecturas, total, cuarto_id, rango } para la UI.
+  const lecturasRaw = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.lecturas) ? data.lecturas : []
+
+  // El back devuelve orden ASC (mas viejo primero). Para la tabla de
+  // auditoria queremos DESC: la pagina 1 muestra lo mas reciente.
+  // Si el back llegara a invertir el orden en el futuro, este sort sigue
+  // funcionando porque toString-compara ISO-8601.
+  const lecturas = [...lecturasRaw].sort((a, b) => {
+    const ta = a?.timestamp ?? ''
+    const tb = b?.timestamp ?? ''
+    if (ta === tb) return 0
+    return ta < tb ? 1 : -1
+  })
+
+  return {
+    lecturas,
+    total: lecturas.length,
+    cuarto_id: cuartoId,
+    rango
+  }
 }
 
 /**
